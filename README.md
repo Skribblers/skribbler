@@ -1,2 +1,2 @@
 # skribbler
-A headless client that can join Skribbl.io lobbies
+A headless client that can join Skribbl.io lobbies.

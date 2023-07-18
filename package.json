@@ -1,0 +1,23 @@
+{
+  "name": "skribbler",
+  "version": "1.0.0",
+  "description": "A headless client that can join Skribbl.io lobbies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Skribblers/skribbler.git"
+  },
+  "author": "MrDiamond64",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Skribblers/skribbler/issues"
+  },
+  "homepage": "https://github.com/Skribblers/skribbler#readme",
+  "dependencies": {
+    "node-fetch": "^2.6.12",
+    "socket.io-client": "^4.7.1"
+  }
+}
