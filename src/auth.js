@@ -1,17 +1,6 @@
 const fetch = require("node-fetch");
 const io = require("socket.io-client");
 
-const headers = {
-	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-	"Accept": "*/*",
-	"Accept-Language": "en-US",
-	"Accept-Encoding": "gzip, deflate, br",
-	"Content-type": "application/x-www-form-urlencoded",
-	"Origin": "https://skribbl.io",
-	"Connection": "keep-alive",
-	"Referer": "https://skribbl.io/"
-};
-
 /**
  * @param {Object} options - Options the client should use
  * @param {String} options.name - The username the bot should join with
@@ -20,6 +9,19 @@ const headers = {
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
 */
 async function joinLobby(options) {
+	const headers = {
+		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+		"Accept": "*/*",
+		"Accept-Language": "en-US",
+		"Accept-Encoding": "gzip, deflate, br",
+		"Content-type": "application/x-www-form-urlencoded",
+		"Origin": "https://skribbl.io",
+		"Connection": "keep-alive",
+		"Referer": "https://skribbl.io/",
+
+		...options.httpHeaders,
+	};
+
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.lang}`;
 
@@ -27,7 +29,6 @@ async function joinLobby(options) {
 		method: "POST",
 		headers: {
 			...headers,
-			...options.httpHeaders,
 
 			"Content-Length": body.length
 		},
