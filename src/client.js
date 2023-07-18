@@ -136,9 +136,11 @@ class Client extends events {
 						player: player,
 						msg: data.msg
 					});
+					break;
 				}
+				default:
+					this.emit(id, data);
 			}
-
 			this.emit("packet", {id, data});
 		});
 	}
@@ -205,12 +207,46 @@ class Client extends events {
 	}
 
 	/**
+	 * @name updateRoomSettings
+	 * @description Change the private room settings if you are the owner
+	 * @param {String} settingId - ID of the setting to change
+	 * @param {String} value - What the value of the setting should be
+	 * @throws
+	 */
+	updateRoomSettings(settingId, value) {
+		this.sendPacket(12, {
+			id: String(settingId),
+			val: String(value)
+		});
+	}
+
+	/**
+	 * @name draw
+	 * @description Draw on the canvas
+	 * @param {Array} data - Draw Data. If the array has more then 8 items, the server simply ignores the packet
+	 * @throws
+	 */
+	draw(data) {
+		this.sendPacket(19, data);
+	}
+
+	/**
 	 * @name clearCanvas
 	 * @description Clear the canvas if you are the current drawer
 	 * @throws
 	 */
 	clearCanvas() {
 		this.sendPacket(20);
+	}
+
+	/**
+	 * @name undo
+	 * @description Undo a draw event
+	 * @param {Number} ownerId
+	 * @throws
+	 */
+	undo(id) {
+		this.sendPacket(21, id);
 	}
 
 	/**
