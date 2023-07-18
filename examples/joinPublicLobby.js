@@ -9,7 +9,7 @@ client.on("connected", () => {
 });
 
 client.on("text", (data) => {
-	console.log(`[${data.sender}] ${data.msg}`);
+	console.log(`[${data.player.name}] ${data.msg}`);
 });
 
 client.on("disconnect", (reason) => {
