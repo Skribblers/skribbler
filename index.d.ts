@@ -24,7 +24,7 @@ declare module "skribbler" {
 		players: Array
 
 		init(): void
-		sendPacket(id: Number, data: Any): void
+		sendPacket(id: Number, data?: Any): void
 		hostKick(userId: Number): void
 		hostBan(userId: Number): void
 		votekick(userId: Number): void
