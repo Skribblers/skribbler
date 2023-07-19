@@ -12,19 +12,6 @@ const io = require("socket.io-client");
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
 async function joinLobby(options) {
-	const headers = {
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-		"Accept": "*/*",
-		"Accept-Language": "en-US",
-		"Accept-Encoding": "gzip, deflate, br",
-		"Content-type": "application/x-www-form-urlencoded",
-		"Origin": "https://skribbl.io",
-		"Connection": "keep-alive",
-		"Referer": "https://skribbl.io/",
-
-		...options.httpHeaders,
-	};
-
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
@@ -32,16 +19,22 @@ async function joinLobby(options) {
 	const request = await fetch("https://skribbl.io:3000/play", {
 		method: "POST",
 		headers: {
-			...headers,
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+			"Accept": "*/*",
+			"Accept-Language": "en-US",
+			"Accept-Encoding": "gzip, deflate, br",
+			"Content-type": "application/x-www-form-urlencoded",
+			"Origin": "https://skribbl.io",
+			"Connection": "keep-alive",
+			"Referer": "https://skribbl.io/",
+			"Content-Length": body.length,
 
-			"Content-Length": body.length
+			...options.httpHeaders,
 		},
 		body: body
 	});
 
 	const serverURI = await request.text();
-
-	headers.Host = serverURI.replace("https://", "");
 
 	// Start websocket connection
 	// @ts-expect-error
