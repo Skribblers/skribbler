@@ -1,13 +1,6 @@
 // @ts-check
 const fetch = require("node-fetch");
 const io = require("socket.io-client");
-const https = require("https");
-
-/* 
-
-
-
-*/
 
 /**
  * @param {Object} options - Options the client should use
@@ -37,9 +30,6 @@ async function joinLobby(options) {
 
 	// @ts-expect-error
 	const request = await fetch("https://skribbl.io:3000/play", {
-    agent: new https.Agent({
-      rejectUnauthorized: false,
-    }),
 		method: "POST",
 		headers: {
 			...headers,
