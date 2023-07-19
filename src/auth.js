@@ -7,6 +7,7 @@ const io = require("socket.io-client");
  * @param {Array} options.avatar - The avatar the bot should join with
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
+ * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
 async function joinLobby(options) {
 	const headers = {
@@ -23,7 +24,7 @@ async function joinLobby(options) {
 	};
 
 	// Get server URI
-	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.lang}`;
+	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
 	const request = await fetch("https://skribbl.io:3000/play", {
 		method: "POST",

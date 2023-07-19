@@ -28,13 +28,13 @@ class Client extends events {
 		this.ownerId = null;
 		this.players = [];
 
-		this.init(options);
+		this.init();
 	}
 
-	async init(options) {
+	async init() {
 		if(this.socket) throw Error("Client has already initialized.");
 
-		const { socket } = await joinLobby(options);
+		const { socket } = await joinLobby(this.options);
 
 		this.socket = socket;
 
@@ -149,7 +149,7 @@ class Client extends events {
 	 * @name sendPacket
 	 * @description Sends a data packet to the server
 	 * @param {Number} id - The packet ID
-	 * @param {any} data - Packet data to send
+	 * @param {any} [data] - Packet data to send
 	 * @throws
 	 */
 	sendPacket(id, data) {
@@ -168,6 +168,8 @@ class Client extends events {
 	 * @throws
 	 */
 	hostKick(userId) {
+		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
+		
 		this.sendPacket(3, userId);
 	}
 
@@ -178,7 +180,9 @@ class Client extends events {
 	 * @throws
 	 */
 	hostBan(userId) {
-		this.sendPacket(4, userId);
+		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
+
+		this.sendPacket(4, Number(userId));
 	}
 
 	/**
@@ -188,7 +192,9 @@ class Client extends events {
 	 * @throws
 	 */
 	votekick(userId) {
-		this.sendPacket(5, userId);
+		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
+
+		this.sendPacket(5, Number(userId));
 	}
 
 	/**
@@ -198,10 +204,12 @@ class Client extends events {
 	 * @throws
 	 */
 	imageVote(id) {
+		if(typeof id !== "number" && typeof id !== "string") throw TypeError("Expected id to be type of String or Number");
+
 		if(id === "dislike") id = 0;
 		if(id === "like") id = 1;
 
-		if(isNaN(id) || id < 0 || id > 1) throw Error("Invalid vote option");
+		if(id < 0 || id > 1) throw Error("Invalid vote option");
 
 		this.sendPacket(8, id);
 	}
@@ -209,24 +217,29 @@ class Client extends events {
 	/**
 	 * @name updateRoomSettings
 	 * @description Change the private room settings if you are the owner
-	 * @param {String} settingId - ID of the setting to change
-	 * @param {String} value - What the value of the setting should be
+	 * @param {String | Number} settingId - ID of the setting to change
+	 * @param {String | Number} val - What the value of the setting should be
 	 * @throws
 	 */
-	updateRoomSettings(settingId, value) {
+	updateRoomSettings(settingId, val) {
+		if(typeof settingId !== "string" && typeof settingId !== "number") throw TypeError("Expected settingId to be type of String or Number");
+		if(typeof val !== "string" && typeof settingId !== "number") throw TypeError("Expected val to be type of String or Number");
+
 		this.sendPacket(12, {
 			id: String(settingId),
-			val: String(value)
+			val: String(val)
 		});
 	}
 
 	/**
 	 * @name draw
 	 * @description Draw on the canvas
-	 * @param {Array} data - Draw Data. If the array has more then 8 items, the server simply ignores the packet
+	 * @param {Array[]} data - Draw Data. If the array has more then 8 items, the server simply ignores the packet
 	 * @throws
 	 */
 	draw(data) {
+		if(Array.isArray(data)) throw TypeError("Expected id to be an array");
+
 		this.sendPacket(19, data);
 	}
 
@@ -242,10 +255,12 @@ class Client extends events {
 	/**
 	 * @name undo
 	 * @description Undo a draw event
-	 * @param {Number} ownerId
+	 * @param {Number} id
 	 * @throws
 	 */
 	undo(id) {
+		if(typeof id !== "number") throw TypeError("Expected id to be type of Number");
+
 		this.sendPacket(21, id);
 	}
 
@@ -265,6 +280,8 @@ class Client extends events {
 	 * @throws
 	 */
 	sendMessage(msg) {
+		if(typeof msg !== "string") throw TypeError("Expected msg to be type of String");
+
 		this.sendPacket(30, msg);
 	}
 

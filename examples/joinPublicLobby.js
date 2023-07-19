@@ -1,4 +1,5 @@
-const { Client } = require("./_src/src/index.js");
+// @ts-check
+const { Client } = require("skribbler");
 
 const client = new Client({
 	name: "Skribbler"

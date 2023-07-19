@@ -1,3 +1,4 @@
+// @ts-check
 const { Client } = require("skribbler");
 
 const client = new Client({
