@@ -1,3 +1,4 @@
+// @ts-check
 const fetch = require("node-fetch");
 const io = require("socket.io-client");
 
@@ -6,6 +7,7 @@ const io = require("socket.io-client");
  * @param {String} options.name - The username the bot should join with
  * @param {Array} options.avatar - The avatar the bot should join with
  * @param {String} [options.lobbyCode] - The lobby code to join with
+ * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
@@ -26,6 +28,7 @@ async function joinLobby(options) {
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
+	// @ts-expect-error
 	const request = await fetch("https://skribbl.io:3000/play", {
 		method: "POST",
 		headers: {
@@ -41,14 +44,15 @@ async function joinLobby(options) {
 	headers.Host = serverURI.replace("https://", "");
 
 	// Start websocket connection
+	// @ts-expect-error
 	const socket = await io(serverURI, {
 		reconnection: false
 	});
 
 	socket.on("connect", () => {
 		socket.emit("login", {
-			join: options.lobbyCode ?? "",
-			create: 0,
+			join: options.lobbyCode ?? (options.createPrivateRoom ? 0 : ""),
+			create: options.createPrivateRoom ? 1 : 0,
 			name: options.name,
 			lang: options.language,
 			avatar: options.avatar

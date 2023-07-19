@@ -8,6 +8,7 @@ class Client extends events {
 	 * @param {String} [options.name] - The username the bot should join with
 	 * @param {Array} [options.avatar] - The avatar the bot should join with
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
+	 * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
 	 * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set.
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
 	 * @throws {TypeError}
@@ -17,6 +18,8 @@ class Client extends events {
 
 		if(typeof options !== "object") throw TypeError("Client options is not an object.");
 		if(typeof options.httpHeaders !== "object") options.httpHeaders = {};
+		
+		if(options.createPrivateRoom && options.lobbyCode) throw TypeError("Cannot create a private room with a lobby code.");
 		if(!options.language) options.language = 0;
 
 		this.options = options;

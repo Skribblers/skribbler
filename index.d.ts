@@ -6,6 +6,7 @@ declare module "skribbler" {
 		name?: String
 		avatar?: Array
 		lobbyCode?: String
+		createPrivateRoom?: Boolean
 		language?: Number
 		httpHeaders?: Object
 	}
