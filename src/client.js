@@ -284,6 +284,15 @@ class Client extends events {
 	}
 
 	/**
+	 * @name endGame
+	 * @description End the game if you are the owner of the private lobby
+	 * @throws
+	 */
+	endGame() {
+		this.sendPacket(23);
+	}
+
+	/**
 	 * @name sendMessage
 	 * @description Send a message in the lobby
 	 * @param {String} msg - The message to send

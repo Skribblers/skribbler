@@ -34,6 +34,7 @@ declare module "skribbler" {
 		clearCanvas(): void
 		undo(id: Number): void
 		startGame(): void
+		endGame(): void
 		sendMessage(msg: String): void
 		disconnect(): void
 	}
