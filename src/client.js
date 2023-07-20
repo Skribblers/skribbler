@@ -22,6 +22,13 @@ class Client extends events {
 		if(options.createPrivateRoom && options.lobbyCode) throw TypeError("Cannot create a private room with a lobby code.");
 		if(!options.language) options.language = 0;
 
+		if(!Array.isArray(options.avatar)) options.avatar = [
+			Math.floor(100 * Math.random()) % 26,
+			Math.floor(100 * Math.random()) % 57,
+			Math.floor(100 * Math.random()) % 51
+			-1
+		];
+
 		this.options = options;
 		this.socket = null;
 
