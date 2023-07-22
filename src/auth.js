@@ -2,6 +2,8 @@
 const fetch = require("node-fetch");
 const io = require("socket.io-client");
 
+const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
+
 /**
  * @param {Object} options - Options the client should use
  * @param {String} options.name - The username the bot should join with
@@ -19,17 +21,18 @@ async function joinLobby(options) {
 	const request = await fetch("https://skribbl.io:3000/play", {
 		method: "POST",
 		headers: {
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+			"Host": "skribbl.io:3000",
+			"User-Agent": userAgent,
 			"Accept": "*/*",
 			"Accept-Language": "en-US",
 			"Accept-Encoding": "gzip, deflate, br",
 			"Content-type": "application/x-www-form-urlencoded",
+			"Content-Length": body.length,
 			"Origin": "https://skribbl.io",
 			"Connection": "keep-alive",
 			"Referer": "https://skribbl.io/",
-			"Content-Length": body.length,
 
-			...options.httpHeaders,
+			...options.httpHeaders
 		},
 		body: body
 	});
@@ -41,6 +44,18 @@ async function joinLobby(options) {
 	// Start websocket connection
 	// @ts-expect-error
 	const socket = await io(serverURI, {
+		extraHeaders: {
+			"Host": serverURI.replace("https://", ""),
+			"User-Agent": userAgent,
+			"Accept": "*/*",
+			"Accept-Language": "en-US",
+			"Accept-Encoding": "gzip, deflate, br",
+			"Origin": "https://skribbl.io",
+			"Connection": "keep-alive",
+			"Referer": "https://skribbl.io/",
+
+			...options.httpHeaders,
+		},
 		reconnection: false
 	});
 
