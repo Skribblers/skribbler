@@ -9,7 +9,7 @@ class Client extends events {
 	 * @param {Array} [options.avatar] - The avatar the bot should join with
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
 	 * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
-	 * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set.
+	 * @param {Number | String} [options.language] - The langauge code to look for servers with. Not needed if a lobby code is set. Can be a number 1-27.
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
 	 * @throws {TypeError}
 	 */

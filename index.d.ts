@@ -10,11 +10,11 @@ declare module "skribbler" {
 		avatar?: Array<Number>
 		lobbyCode?: String
 		createPrivateRoom?: Boolean
-		language?: Number
+		language?: Number | String
 		httpHeaders?: Object
 	}
 
-	export class Client extends events{
+	export class Client extends events {
 		constructor(options: ClientOptions)
 
 		options: ClientOptions

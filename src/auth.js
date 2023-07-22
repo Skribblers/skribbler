@@ -49,7 +49,8 @@ async function joinLobby(options) {
 			join: options.lobbyCode ?? (options.createPrivateRoom ? 0 : ""),
 			create: options.createPrivateRoom ? 1 : 0,
 			name: options.name,
-			lang: options.language,
+			lang: String(options.language),
+			code: undefined,
 			avatar: options.avatar
 		});
 	});
