@@ -4,7 +4,7 @@ const { Socket } = require("socket.io-client");
 declare module "skribbler" {
 	export interface ClientOptions {
 		name?: String
-		avatar?: Array
+		avatar?: Array<Number>
 		lobbyCode?: String
 		createPrivateRoom?: Boolean
 		language?: Number
@@ -21,16 +21,16 @@ declare module "skribbler" {
 		settings: Object
 		userId?: Number
 		ownerId?: Number
-		players: Array
+		players: Array<Object>
 
 		init(): void
-		sendPacket(id: Number, data?: Any): void
+		sendPacket(id: Number, data?: any): void
 		hostKick(userId: Number): void
 		hostBan(userId: Number): void
 		votekick(userId: Number): void
 		imageVote(id: String | Number): void
 		updateRoomSettings(settingId: String, val: String): void
-		draw(data: Array): void
+		draw(data: Array<Array<Number>>): void
 		clearCanvas(): void
 		undo(id: Number): void
 		startGame(): void

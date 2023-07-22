@@ -34,6 +34,8 @@ async function joinLobby(options) {
 		body: body
 	});
 
+	if(request.status === 503) throw Error("Unable to get server URI. Either you are creating too many clients or skribbl.io is down.");
+
 	const serverURI = await request.text();
 
 	// Start websocket connection
