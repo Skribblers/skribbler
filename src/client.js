@@ -192,7 +192,7 @@ class Client extends events {
 	hostBan(userId) {
 		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
 
-		this.sendPacket(4, Number(userId));
+		this.sendPacket(4, userId);
 	}
 
 	/**
@@ -204,7 +204,7 @@ class Client extends events {
 	votekick(userId) {
 		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
 
-		this.sendPacket(5, Number(userId));
+		this.sendPacket(5, userId);
 	}
 
 	/**

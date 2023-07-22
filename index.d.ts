@@ -2,6 +2,9 @@ const events = require("events");
 const { Socket } = require("socket.io-client");
 
 declare module "skribbler" {
+	type Vote = "like" | "dislike"
+	type Events = "connected" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | Number
+
 	export interface ClientOptions {
 		name?: String
 		avatar?: Array<Number>
@@ -28,7 +31,7 @@ declare module "skribbler" {
 		hostKick(userId: Number): void
 		hostBan(userId: Number): void
 		votekick(userId: Number): void
-		imageVote(id: String | Number): void
+		imageVote(id: Number | Vote): void
 		updateRoomSettings(settingId: String, val: String): void
 		draw(data: Array<Array<Number>>): void
 		clearCanvas(): void
@@ -37,5 +40,7 @@ declare module "skribbler" {
 		endGame(): void
 		sendMessage(msg: String): void
 		disconnect(): void
+
+		on(event: Events, callback: Function): void
 	}
 }
