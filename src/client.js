@@ -248,7 +248,7 @@ class Client extends events {
 	 * @throws
 	 */
 	draw(data) {
-		if(Array.isArray(data)) throw TypeError("Expected id to be an array");
+		if(!Array.isArray(data)) throw TypeError("Expected data to be an array");
 
 		this.sendPacket(19, data);
 	}
