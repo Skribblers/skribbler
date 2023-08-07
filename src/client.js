@@ -37,6 +37,10 @@ class Client extends events {
 		this.userId = null;
 		this.ownerId = null;
 		this.players = [];
+		this.time = null;
+		this.currentDrawer = null;
+		this.availableWords = [];
+		this.canvas = [];
 
 		this.init();
 	}
@@ -101,9 +105,28 @@ class Client extends events {
 					this.ownerId = data.owner;
 
 					this.players = data.users;
+
+					this.time = data.state.time;
+					this.currentDrawer = this.players.find(plr => plr.id === data.state.data.id);
 					
 					this.emit("connected");
 					break;
+				case 11: {
+					if(data.data === 0) this.emit("roundStart");
+
+					this.time = data.time;
+					this.currentDrawer = this.players.find(plr => plr.id === data.data.id);
+
+					if(Array.isArray(data.data?.words)) {
+						this.availableWords = data.data.words;
+
+						this.emit("chooseWord", data.data.words);
+					} else this.availableWords = [];
+
+					if(data.id === 4 && data.data.id === this.currentDrawer.id) this.emit("canDraw");
+
+					break;
+				}
 				case 12: {
 					const setting = Object.keys(this.settings)[data.id];
 
@@ -112,6 +135,9 @@ class Client extends events {
 				}
 				case 13:
 					this.emit("hintRevealed", data[0]);
+					break;
+				case 14:
+					this.time = data - 1;
 					break;
 				case 15: {
 					const player = this.players.find(plr => plr.id === data.id);
@@ -134,9 +160,13 @@ class Client extends events {
 					break;
 				}
 				case 19:
+					this.canvas = this.canvas.concat(data);
+
 					this.emit("draw", data);
 					break;
 				case 20:
+					this.canvas = [];
+
 					this.emit("clearCanvas");
 					break;
 				case 30: {
@@ -153,6 +183,10 @@ class Client extends events {
 			}
 			this.emit("packet", {id, data});
 		});
+
+		setInterval(() => {
+			if(this.time && this.time > 0) this.time--;
+		}, 1000);
 	}
 
 	/**
@@ -250,6 +284,8 @@ class Client extends events {
 	draw(data) {
 		if(!Array.isArray(data)) throw TypeError("Expected data to be an array");
 
+		this.canvas = this.canvas.concat(data);
+
 		this.sendPacket(19, data);
 	}
 
@@ -259,17 +295,23 @@ class Client extends events {
 	 * @throws
 	 */
 	clearCanvas() {
+		this.canvas = [];
+
 		this.sendPacket(20);
 	}
 
 	/**
 	 * @name undo
 	 * @description Undo a draw event
-	 * @param {Number} id
+	 * @param {Number} [id]
 	 * @throws
 	 */
 	undo(id) {
-		if(typeof id !== "number") throw TypeError("Expected id to be type of Number");
+		if(!id) id = this.canvas.length - 1;
+
+		if(this.canvas.length === 1) return this.clearCanvas();
+
+		this.canvas.splice(id, 1);
 
 		this.sendPacket(21, id);
 	}
@@ -290,6 +332,27 @@ class Client extends events {
 	 */
 	endGame() {
 		this.sendPacket(23);
+	}
+
+	/**
+	 * @name selectWord
+	 * @description The word to select to draw. You can listen in on the chooseWord event, which provides an array of all the possible words. The exact word or the array index number are accepted
+	 * @param {Number | String} word - The message to send
+	 * @throws
+	 */
+	selectWord(word) {
+		if(typeof word !== "number" && typeof word !== "string") throw TypeError("Expected word to be type of Number or String");
+
+		if(isNaN(word)) {
+			for(let i = 0; i < this.availableWords.length + 1; i++) {
+				if(this.availableWords[i] === word) {
+					word = i;
+					break;
+				}
+			}
+		}
+
+		this.sendPacket(18, word);
 	}
 
 	/**
