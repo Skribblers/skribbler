@@ -12,6 +12,7 @@ declare module "skribbler" {
 		createPrivateRoom?: Boolean
 		language?: Number | String
 		httpHeaders?: Object
+		socketOptions?: Object
 	}
 	
 	export interface PlayerObject {

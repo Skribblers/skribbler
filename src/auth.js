@@ -12,6 +12,7 @@ const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
  * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
  * @param {Object} [options.httpHeaders] - HTTP headers to use
+ * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */
 async function joinLobby(options) {
 	// Get server URI
@@ -56,7 +57,9 @@ async function joinLobby(options) {
 
 			...options.httpHeaders,
 		},
-		reconnection: false
+		reconnection: false,
+
+		...options.socketOptions
 	});
 
 	socket.on("connect", () => {

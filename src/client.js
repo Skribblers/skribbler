@@ -11,6 +11,7 @@ class Client extends events {
 	 * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
 	 * @param {Number | String} [options.language] - The langauge code to look for servers with. Not needed if a lobby code is set. Can be a number 1-27.
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
+	 * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 	 * @throws {TypeError}
 	 */
 	constructor(options = {}) {
