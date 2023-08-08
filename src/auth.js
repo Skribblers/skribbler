@@ -73,9 +73,7 @@ async function joinLobby(options) {
 		});
 	});
 
-	return {
-		socket
-	};
+	return socket;
 }
 
 module.exports = {

@@ -50,7 +50,7 @@ declare module "skribbler" {
 		draw(data: Array<Array<Number>>): void
 		clearCanvas(): void
 		undo(id?: Number): void
-		startGame(): void
+		startGame(customWords?: Array<String>): void
 		endGame(): void
 		selectWord(word: Number | String): void
 		sendMessage(msg: String): void

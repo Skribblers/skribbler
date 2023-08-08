@@ -49,8 +49,7 @@ class Client extends events {
 	async init() {
 		if(this.socket) throw Error("Client has already initialized.");
 
-		const { socket } = await joinLobby(this.options);
-
+		const socket = await joinLobby(this.options);
 		this.socket = socket;
 
 		let disconnectReason;
@@ -201,8 +200,8 @@ class Client extends events {
 		if(!this.socket) throw Error("Socket isnt initialized yet.");
 
 		this.socket.emit("data", {
-			id: id,
-			data: data
+			id,
+			data
 		});
 	}
 
@@ -252,7 +251,7 @@ class Client extends events {
 		if(typeof id !== "number" && typeof id !== "string") throw TypeError("Expected id to be type of String or Number");
 
 		if(id === "dislike") id = 0;
-		if(id === "like") id = 1;
+			else if(id === "like") id = 1;
 
 		if(id < 0 || id > 1) throw Error("Invalid vote option");
 
@@ -274,6 +273,27 @@ class Client extends events {
 			id: String(settingId),
 			val: String(val)
 		});
+	}
+
+	/**
+	 * @name selectWord
+	 * @description The word to select to draw. You can listen in on the chooseWord event, which provides an array of all the possible words. The exact word or the array index number are accepted
+	 * @param {Number | String} word - The message to send
+	 * @throws
+	 */
+	selectWord(word) {
+		if(typeof word !== "number" && typeof word !== "string") throw TypeError("Expected word to be type of Number or String");
+
+		if(isNaN(word)) {
+			for(let i = 0; i < this.availableWords.length + 1; i++) {
+				if(this.availableWords[i] === word) {
+					word = i;
+					break;
+				}
+			}
+		}
+
+		this.sendPacket(18, word);
 	}
 
 	/**
@@ -320,10 +340,13 @@ class Client extends events {
 	/**
 	 * @name startGame
 	 * @description Start the round if you are the owner of the private lobby
+	 * @param {Array} [customWords] - Custom words to use. Note: If there are less then 10 custom words, the server does not use the custom word list
 	 * @throws
 	 */
-	startGame() {
-		this.sendPacket(22);
+	startGame(customWords) {
+		if(typeof customWords !== "undefined" && !Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
+
+		this.sendPacket(22, customWords ? customWords.join(", ") : "");
 	}
 
 	/**
@@ -333,27 +356,6 @@ class Client extends events {
 	 */
 	endGame() {
 		this.sendPacket(23);
-	}
-
-	/**
-	 * @name selectWord
-	 * @description The word to select to draw. You can listen in on the chooseWord event, which provides an array of all the possible words. The exact word or the array index number are accepted
-	 * @param {Number | String} word - The message to send
-	 * @throws
-	 */
-	selectWord(word) {
-		if(typeof word !== "number" && typeof word !== "string") throw TypeError("Expected word to be type of Number or String");
-
-		if(isNaN(word)) {
-			for(let i = 0; i < this.availableWords.length + 1; i++) {
-				if(this.availableWords[i] === word) {
-					word = i;
-					break;
-				}
-			}
-		}
-
-		this.sendPacket(18, word);
 	}
 
 	/**
