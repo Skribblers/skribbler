@@ -108,7 +108,8 @@ class Client extends events {
 
 					this.time = data.state.time;
 					this.currentDrawer = this.players.find(plr => plr.id === data.state.data.id);
-					
+					this.canvas = this.canvas.concat(data.state.data.drawCommands);
+
 					this.emit("connected");
 					break;
 				case 11: {
