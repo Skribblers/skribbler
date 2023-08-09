@@ -20,7 +20,7 @@ class Client extends events {
 
 		if(typeof options !== "object") throw TypeError("Client options is not an object.");
 		if(typeof options.httpHeaders !== "object") options.httpHeaders = {};
-		
+
 		if(options.createPrivateRoom && options.lobbyCode) throw TypeError("Cannot create a private room with a lobby code.");
 		if(!options.language) options.language = 0;
 
@@ -86,7 +86,7 @@ class Client extends events {
 						player: player,
 						reason: data.reason
 					});
-				
+
 					break;
 				}
 				case 10:
@@ -217,7 +217,7 @@ class Client extends events {
 	 */
 	hostKick(userId) {
 		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
-		
+
 		this.sendPacket(3, userId);
 	}
 
