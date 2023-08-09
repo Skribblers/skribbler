@@ -246,12 +246,12 @@ class Client extends events {
 	}
 
 	/**
-	 * @name imageVote
+	 * @name vote
 	 * @description Vote on an image
 	 * @param {Number | String} id - Can be either 0, 1, like or dislike
 	 * @throws
 	 */
-	imageVote(id) {
+	vote(id) {
 		if(typeof id !== "number" && typeof id !== "string") throw TypeError("Expected id to be type of String or Number");
 
 		if(id === "dislike") id = 0;

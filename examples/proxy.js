@@ -19,7 +19,7 @@ proxy.on("playerJoin", (player) => {
     player.on("outgoing", (name, args) => {
         console.log(name, args);
 
-        args.data = "I didnt say this.";
+        if(args.id === 30) args.data = "I didnt say this.";
 
         // Player is always alerted of spaming
         player.sendOutbound(32);

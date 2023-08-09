@@ -47,7 +47,7 @@ declare module "skribbler" {
 		hostKick(userId: Number): void
 		hostBan(userId: Number): void
 		votekick(userId: Number): void
-		imageVote(id: Number | Vote): void
+		vote(id: Number | Vote): void
 		updateRoomSettings(settingId: String, val: String): void
 		draw(data: Array<Array<Number>>): void
 		clearCanvas(): void
