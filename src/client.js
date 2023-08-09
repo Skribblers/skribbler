@@ -185,7 +185,9 @@ class Client extends events {
 			this.emit("packet", {id, data});
 		});
 
-		setInterval(() => {
+		const interval = setInterval(() => {
+			if(!this.socket.connected) return clearInterval(interval);
+
 			if(this.time && this.time > 0) this.time--;
 		}, 1000);
 	}
