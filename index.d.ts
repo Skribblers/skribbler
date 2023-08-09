@@ -1,9 +1,11 @@
-const events = require("events");
-const { Socket } = require("socket.io-client");
+import { Server } from "socket.io";
+import { Socket } from "socket.io-client";
+
+import * as events from "events";
 
 declare module "skribbler" {
 	export type Vote = "like" | "dislike"
-	export type Events = "connected" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "roundStart" | "chooseWord" | "canDraw" | Number
+	export type ClientEvents = "connected" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "roundStart" | "chooseWord" | "canDraw" | Number
 
 	export interface ClientOptions {
 		name?: String
@@ -56,6 +58,37 @@ declare module "skribbler" {
 		sendMessage(msg: String): void
 		disconnect(): void
 
-		on(event: Events, callback: Function): void
+		on(event: ClientEvents, callback: Function): void
+	}
+
+	type ProxyEvents = "playerJoin"
+
+	export class ProxyOptions {
+		lobbyCode?: String
+		language?: Number | String
+		httpHeaders?: Object
+	}
+
+	export class Proxy extends events {
+		constructor(options: ClientOptions)
+
+		options: ProxyOptions
+
+		init(): void
+		on(event: ProxyEvents, callback: Function): void
+	}
+
+	type ProxyPlayerEvents = "connect" | "incoming" | "outgoing" | "disconnect"
+
+	export class ProxyPlayer extends events {
+		constructor(client: Socket, server: Server)
+
+		upstream: Server
+		socket: Socket
+
+		sendOutbound(id: Number, data: any): void
+		sendInbound(id: Number, data: any): void
+		disconnect(): void
+		on(event: ProxyPlayerEvents, callback: Function): void
 	}
 }

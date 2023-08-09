@@ -1,3 +1,4 @@
+// @ts-check
 const events = require("events");
 const { joinLobby } = require("./auth.js");
 
@@ -9,7 +10,7 @@ class Client extends events {
 	 * @param {Array} [options.avatar] - The avatar the bot should join with
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
 	 * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
-	 * @param {Number | String} [options.language] - The langauge code to look for servers with. Not needed if a lobby code is set. Can be a number 1-27.
+	 * @param {Number} [options.language] - The langauge code to look for servers with. Not needed if a lobby code is set. Can be a number 1-27.
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
 	 * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 	 * @throws {TypeError}
@@ -256,6 +257,7 @@ class Client extends events {
 		if(id === "dislike") id = 0;
 			else if(id === "like") id = 1;
 
+		// @ts-expect-error
 		if(id < 0 || id > 1) throw Error("Invalid vote option");
 
 		this.sendPacket(8, id);
@@ -287,6 +289,7 @@ class Client extends events {
 	selectWord(word) {
 		if(typeof word !== "number" && typeof word !== "string") throw TypeError("Expected word to be type of Number or String");
 
+		// @ts-expect-error
 		if(isNaN(word)) {
 			for(let i = 0; i < this.availableWords.length + 1; i++) {
 				if(this.availableWords[i] === word) {

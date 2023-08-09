@@ -5,16 +5,12 @@ const io = require("socket.io-client");
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
 
 /**
- * @param {Object} options - Options the client should use
- * @param {String} options.name - The username the bot should join with
- * @param {Array} options.avatar - The avatar the bot should join with
+ * @param {Object} [options] - Options the client should use
  * @param {String} [options.lobbyCode] - The lobby code to join with
- * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
  * @param {Object} [options.httpHeaders] - HTTP headers to use
- * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */
-async function joinLobby(options) {
+async function getServerUri(options = {}) {
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
@@ -42,6 +38,22 @@ async function joinLobby(options) {
 
 	const serverURI = await request.text();
 
+	return serverURI;
+}
+
+/**
+ * @param {Object} [options] - Options the client should use
+ * @param {String} [options.name] - The username the bot should join with
+ * @param {Array} [options.avatar] - The avatar the bot should join with
+ * @param {String} [options.lobbyCode] - The lobby code to join with
+ * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
+ * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
+ * @param {Object} [options.httpHeaders] - HTTP headers to use
+ * @param {Object} [options.socketOptions] - Options to use for socket.io-client
+*/
+async function joinLobby(options = {}) {
+	const serverURI = await getServerUri(options);
+
 	// Start websocket connection
 	// @ts-expect-error
 	const socket = await io(serverURI, {
@@ -68,7 +80,6 @@ async function joinLobby(options) {
 			create: options.createPrivateRoom ? 1 : 0,
 			name: options.name,
 			lang: String(options.language),
-			code: undefined,
 			avatar: options.avatar
 		});
 	});
@@ -77,5 +88,6 @@ async function joinLobby(options) {
 }
 
 module.exports = {
-	joinLobby
+	joinLobby,
+	getServerUri
 };
