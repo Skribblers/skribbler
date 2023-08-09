@@ -72,6 +72,8 @@ class ProxyPlayer extends events {
 		this.upstream = server;
 		this.socket = client;
 
+		this.connected = true;
+
 		this.upstream.on("connect", () => {
 			this.emit("connect");
 		});
@@ -90,6 +92,7 @@ class ProxyPlayer extends events {
 
 		server.on("disconnect", () => {
 			client.disconnect();
+			this.connected = false;
 
 			this.emit("disconnect");
 		});
@@ -126,6 +129,8 @@ class ProxyPlayer extends events {
 	 * @description Disconnect from the server
 	 */
 	disconnect() {
+		this.connected = false;
+
 		this.upstream.disconnect();
 	}
 }

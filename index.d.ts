@@ -86,6 +86,8 @@ declare module "skribbler" {
 		upstream: Server
 		socket: Socket
 
+		connected: Boolean
+
 		sendOutbound(id: Number, data: any): void
 		sendInbound(id: Number, data: any): void
 		disconnect(): void
