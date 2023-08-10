@@ -60,7 +60,7 @@ class Proxy extends events {
 			this.emit("playerJoin", player);
 		});
 
-		const port = this.options.port ?? 552;
+		const port = this.options.port ?? 3000;
 
 		server.listen(port, () => {
 			console.log(`Started proxy server on http://localhost:${port}`);
