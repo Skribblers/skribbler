@@ -110,7 +110,7 @@ class ProxyPlayer extends events {
 	/**
 	 * @name sendOutbound
 	 * @param {Number} id - Packet ID to send
-	 * @param {any} data - Packet data to send
+	 * @param {any} [data] - Packet data to send
 	 * @description This function sends a packet to the skribbl.io server
 	 */
 	sendOutbound(id, data) {
@@ -123,7 +123,7 @@ class ProxyPlayer extends events {
 	/**
 	 * @name sendInbound
 	 * @param {Number} id - Packet ID to send
-	 * @param {any} data - Packet data to send
+	 * @param {any} [data] - Packet data to send
 	 * @description This function sends a packet to the client
 	 */
 	sendInbound(id, data) {

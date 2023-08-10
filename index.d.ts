@@ -88,8 +88,8 @@ declare module "skribbler" {
 
 		connected: Boolean
 
-		sendOutbound(id: Number, data: any): void
-		sendInbound(id: Number, data: any): void
+		sendOutbound(id: Number, data?: any): void
+		sendInbound(id: Number, data?: any): void
 		disconnect(): void
 		on(event: ProxyPlayerEvents, callback: Function): this
 	}
