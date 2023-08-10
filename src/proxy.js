@@ -14,6 +14,7 @@ class Proxy extends events {
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
 	 * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
+	 * @throws
 	*/
 	constructor(options = {}) {
 		super();

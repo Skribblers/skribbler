@@ -57,8 +57,7 @@ declare module "skribbler" {
 		selectWord(word: Number | String): void
 		sendMessage(msg: String): void
 		disconnect(): void
-
-		on(event: ClientEvents, callback: Function): void
+		on(event: ClientEvents, listener: Function): this
 	}
 
 	type ProxyEvents = "playerJoin"
@@ -76,7 +75,7 @@ declare module "skribbler" {
 		options: ProxyOptions
 
 		init(): void
-		on(event: ProxyEvents, callback: Function): void
+		on(event: ProxyEvents, callback: Function): this
 	}
 
 	type ProxyPlayerEvents = "connect" | "incoming" | "outgoing" | "disconnect"
@@ -92,6 +91,6 @@ declare module "skribbler" {
 		sendOutbound(id: Number, data: any): void
 		sendInbound(id: Number, data: any): void
 		disconnect(): void
-		on(event: ProxyPlayerEvents, callback: Function): void
+		on(event: ProxyPlayerEvents, callback: Function): this
 	}
 }

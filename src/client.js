@@ -101,8 +101,7 @@ class Client extends events {
 				case 10:
 					if(
 						!Array.isArray(data?.settings) ||
-						!Array.isArray(data?.users) ||
-						!Array.isArray(data?.state?.data?.drawCommands)
+						!Array.isArray(data?.users)
 					) return console.log(`Received invalid packet. ID: 10.`);
 
 					this.lobbyId = data.id;
@@ -220,6 +219,12 @@ class Client extends events {
 						player: player,
 						msg: data.msg
 					});
+					break;
+				}
+				case 31: {
+					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 31.`);
+
+					this.emit("startError", data.id);
 					break;
 				}
 				default:
@@ -389,12 +394,19 @@ class Client extends events {
 	 * @name startGame
 	 * @description Start the round if you are the owner of the private lobby
 	 * @param {Array} [customWords] - Custom words to use. Note: If there are less then 10 custom words, the server does not use the custom word list
+	 * @returns {Promise<Number>} startError
 	 * @throws
 	 */
-	startGame(customWords) {
+	async startGame(customWords) {
 		if(typeof customWords !== "undefined" && !Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
 
 		this.sendPacket(22, customWords ? customWords.join(", ") : "");
+
+		return new Promise((resolve) => {
+			this.once("startError", (error) => {
+				resolve(error);
+			});
+		});
 	}
 
 	/**
