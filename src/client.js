@@ -144,7 +144,6 @@ class Client extends events {
 					} else this.availableWords = [];
 
 					if(data.id === 4 && data.data.id === this.currentDrawer?.id) this.emit("canDraw");
-
 					break;
 				}
 				case 12: {
@@ -394,7 +393,7 @@ class Client extends events {
 	 * @name startGame
 	 * @description Start the round if you are the owner of the private lobby
 	 * @param {Array} [customWords] - Custom words to use. Note: If there are less then 10 custom words, the server does not use the custom word list
-	 * @returns {Promise<Number>} startError
+	 * @returns {Promise<Number | String>} startError
 	 * @throws
 	 */
 	async startGame(customWords) {
@@ -403,9 +402,16 @@ class Client extends events {
 		this.sendPacket(22, customWords ? customWords.join(", ") : "");
 
 		return new Promise((resolve) => {
+			let resolved;
 			this.once("startError", (error) => {
+				resolved = true;
 				resolve(error);
 			});
+
+			// If we havent recieved a startError event after 2.5 seconds, most likely it succeeded
+			setInterval(() => {
+				if(!resolved) resolve("OK");
+			}, 2500);
 		});
 	}
 
