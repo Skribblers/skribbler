@@ -10,6 +10,7 @@ const clientIo = require("socket.io-client");
 class Proxy extends events {
 	/**
 	 * @param {Object} options - Options the client should use
+	 * @param {Number} [options.port] - The port to start the proxy on
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
 	 * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
@@ -59,8 +60,10 @@ class Proxy extends events {
 			this.emit("playerJoin", player);
 		});
 
-		server.listen(3000, () => {
-			console.log("Started proxy server on http://localhost:3000");
+		const port = this.options.port ?? 552;
+
+		server.listen(port, () => {
+			console.log(`Started proxy server on http://localhost:${port}`);
 		});
 	}
 }

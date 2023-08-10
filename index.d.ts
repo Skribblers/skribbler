@@ -64,6 +64,7 @@ declare module "skribbler" {
 	type ProxyEvents = "playerJoin"
 
 	export class ProxyOptions {
+		port?: Number
 		lobbyCode?: String
 		language?: Number | String
 		httpHeaders?: Object
