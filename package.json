@@ -1,6 +1,6 @@
 {
   "name": "skribbler",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "A headless client that can join Skribbl.io lobbies",
   "main": "index.js",
   "scripts": {
