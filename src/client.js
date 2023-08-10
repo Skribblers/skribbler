@@ -72,12 +72,21 @@ class Client extends events {
 
 		// Start listening for packets
 		socket.on("data", ({id, data}) => {
+			if(data === null) return;
+
 			switch(id) {
 				case 1:
+					if(typeof data !== "object") return console.log(`Received invalid packet. ID: 1.`);
+
 					this.players.push(data);
 					this.emit("playerJoin", data);
 					break;
 				case 2: {
+					if(
+						typeof data?.id !== "number" ||
+						typeof data.reason !== "number"
+					) return console.log(`Received invalid packet. ID: 2.`);
+
 					const index = this.players.findIndex(plr => plr.id === data.id);
 					const player = this.players.splice(index, 1)[0];
 
@@ -90,6 +99,12 @@ class Client extends events {
 					break;
 				}
 				case 10:
+					if(
+						!Array.isArray(data?.settings) ||
+						!Array.isArray(data?.users) ||
+						!Array.isArray(data?.state?.data?.drawCommands)
+					) return console.log(`Received invalid packet. ID: 10.`);
+
 					this.lobbyId = data.id;
 					this.settings = {
 						language: data.settings[0],
@@ -111,9 +126,13 @@ class Client extends events {
 					this.currentDrawer = this.players.find(plr => plr.id === data.state.data.id);
 					this.canvas = this.canvas.concat(data.state.data.drawCommands);
 
-					this.emit("connected");
+					this.emit("connect");
 					break;
 				case 11: {
+					if(
+						typeof data?.data !== "object"
+					) return console.log(`Received invalid packet. ID: 11.`);
+
 					if(data.data === 0) this.emit("roundStart");
 
 					this.time = data.time;
@@ -125,35 +144,55 @@ class Client extends events {
 						this.emit("chooseWord", data.data.words);
 					} else this.availableWords = [];
 
-					if(data.id === 4 && data.data.id === this.currentDrawer.id) this.emit("canDraw");
+					if(data.id === 4 && data.data.id === this.currentDrawer?.id) this.emit("canDraw");
 
 					break;
 				}
 				case 12: {
+					if(
+						typeof data?.id !== "number" ||
+						typeof data?.val === "number"
+					) return console.log(`Received invalid packet. ID: 12.`);
+
 					const setting = Object.keys(this.settings)[data.id];
 
 					this.settings[setting] = data.value;
 					break;
 				}
 				case 13:
-					this.emit("hintRevealed", data[0]);
+					if(!Array.isArray(data)) return console.log(`Received invalid packet. ID: 13.`);
+
+					this.emit("hintRevealed", data);
 					break;
 				case 14:
+					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 14.`);
+
 					this.time = data - 1;
 					break;
 				case 15: {
+					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 15.`);
+
 					const player = this.players.find(plr => plr.id === data.id);
+					if(!player) return;
 
 					this.emit("playerGuessed", {
-						player
+						player,
+						// Can be undefined
+						word: data.word
 					});
 					break;
 				}
 				case 16:
+					if(typeof data !== "string") return console.log(`Received invalid packet. ID: 16.`);
+
 					this.emit("closeWord", data);
 					break;
 				case 17: {
+					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 17.`);
+
 					const player = this.players.find(plr => plr.id === data.id);
+					if(!player) return;
+
 					this.owner = data.id;
 
 					this.emit("newOwner", {
@@ -172,7 +211,10 @@ class Client extends events {
 					this.emit("clearCanvas");
 					break;
 				case 30: {
+					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 30.`);
+
 					const player = this.players.find(plr => plr.id === data.id);
+					if(!player) return;
 
 					this.emit("text", {
 						player: player,

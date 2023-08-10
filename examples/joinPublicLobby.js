@@ -5,7 +5,7 @@ const client = new Client({
 	name: "Skribbler"
 });
 
-client.on("connected", () => {
+client.on("connect", () => {
 	console.log("Connected!");
 });
 

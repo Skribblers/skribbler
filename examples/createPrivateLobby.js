@@ -5,7 +5,7 @@ const client = new Client({
 	createPrivateRoom: true
 });
 
-client.on("connected", () => {
+client.on("connect", () => {
 	console.log(`Created private room. Link: https://skribbl.io/?${client.lobbyId}`);
 });
 

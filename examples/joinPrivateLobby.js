@@ -6,7 +6,7 @@ const client = new Client({
 	lobbyCode: "ZeAxDTpX"
 });
 
-client.on("connected", () => {
+client.on("connect", () => {
 	console.log("Connected!");
 });
 
