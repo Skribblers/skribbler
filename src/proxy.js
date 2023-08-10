@@ -100,6 +100,11 @@ class ProxyPlayer extends events {
 
 			this.emit("disconnect");
 		});
+
+		// Client disconnected from proxy
+		client.on("disconnect", () => {
+			server.disconnect();
+		});
 	}
 
 	/**
