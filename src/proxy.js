@@ -4,7 +4,7 @@ const { getServerUri } = require("./auth.js");
 
 // Web server
 const http = require('http');
-const { Socket, Server } = require("socket.io");
+const { Server } = require("socket.io");
 const clientIo = require("socket.io-client");
 
 class Proxy extends events {
