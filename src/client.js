@@ -146,7 +146,8 @@ class Client extends events {
 					break;
 				case 11: {
 					if(
-						typeof data?.data !== "object" && typeof data?.data !== "number"
+						typeof data?.id !== "number" ||
+						typeof data?.time !== "number"
 					) return console.log(`Received invalid packet. ID: 11.`);
 
 					this.state = data.id;
@@ -160,12 +161,21 @@ class Client extends events {
 							// @ts-ignore
 							this.round = data.data + 1;
 
-							this.emit("roundStart");
+							// Scores are reset
+							if(this.round === 0) {
+								for(const player of this.players) {
+									player.score = 0;
+								}
+							}
+
+							this.emit("roundStart", this.round);
 							break;
 						}
 
 						case 3: {
-							if(Array.isArray(data.data?.words)) {
+							if(typeof data.data !== "object") return console.log(`Received invalid packet. ID: 11`);
+
+							if(Array.isArray(data.data.words)) {
 								const words = data.data.words;
 
 								this.availableWords = words;
@@ -176,6 +186,8 @@ class Client extends events {
 						}
 
 						case 4: {
+							if(typeof data.data !== "object") return console.log(`Received invalid packet. ID: 11`);
+
 							this.canvas = [];
 							this.availableWords = [];
 							this.currentDrawer = this.players.find(plr => plr.id === data.data?.id);
@@ -186,10 +198,23 @@ class Client extends events {
 						}
 
 						case 5: {
+							if(!Array.isArray(data.data?.words)) return console.log(`Received invalid packet. ID: 11`);
+
+							let counter = 0;
 							for(const player of this.players) {
 								player.guessed = false;
+								player.score = data.data.scores[(counter * 3) + 1];
+
+								counter++;
 							}
 							break;
+						}
+
+						// When a private lobby's game ends, reset all the player's scores
+						case 7: {
+							for(const player of this.players) {
+								player.score = 0;
+							}
 						}
 					}
 					break;
