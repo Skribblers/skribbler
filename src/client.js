@@ -149,13 +149,21 @@ class Client extends events {
 						typeof data?.data !== "object" && typeof data?.data !== "number"
 					) return console.log(`Received invalid packet. ID: 11.`);
 
-					if(data.data === 0) this.emit("roundStart");
-
-					this.time = data.time;
 					this.state = data.id;
+					this.time = data.time;
 
 					// Handle game state
 					switch(data.id) {
+						case 2: {
+							if(typeof data.data !== "number") return console.log(`Received invalid packet. ID: 11`);
+
+							// @ts-ignore
+							this.round = data.data + 1;
+
+							this.emit("roundStart");
+							break;
+						}
+
 						case 3: {
 							if(Array.isArray(data.data?.words)) {
 								const words = data.data.words;
@@ -181,9 +189,7 @@ class Client extends events {
 							for(const player of this.players) {
 								player.guessed = false;
 							}
-
-							// @ts-ignore
-							this.round++;
+							break;
 						}
 					}
 					break;
