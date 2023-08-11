@@ -32,20 +32,26 @@ class Client extends events {
 		];
 
 		this.options = options;
-		this.socket = null;
-
-		this.lobbyId = null;
-		this.settings = {};
-		this.userId = null;
-		this.ownerId = null;
-		this.players = [];
-		this.time = null;
-		this.currentDrawer = null;
-		this.availableWords = [];
-		this.canvas = [];
 
 		this.init();
 	}
+
+	options = {};
+	socket = null;
+
+	lobbyId = null;
+	settings = {};
+
+	state = null;
+	round = null;
+
+	userId = null;
+	ownerId = null;
+	players = [];
+	time = null;
+	currentDrawer = null;
+	availableWords = [];
+	canvas = [];
 
 	async init() {
 		if(this.socket) throw Error("Client has already initialized.");
@@ -88,6 +94,8 @@ class Client extends events {
 					) return console.log(`Received invalid packet. ID: 2.`);
 
 					const index = this.players.findIndex(plr => plr.id === data.id);
+					if(index === -1) break;
+
 					const player = this.players.splice(index, 1)[0];
 
 					this.emit("playerLeave", {
@@ -116,45 +124,73 @@ class Client extends events {
 						useCustomWords: data.settings[7] ? true : false
 					};
 
+					this.state = data.state?.id;
+					this.round = data.round;
+
 					this.userId = data.me;
 					this.ownerId = data.owner;
 
 					this.players = data.users;
 
 					this.time = data.state.time;
-					this.currentDrawer = this.players.find(plr => plr.id === data.state.data.id);
-					this.canvas = this.canvas.concat(data.state.data.drawCommands);
+					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id);
+					this.canvas = this.canvas.concat(data.state?.data?.drawCommands);
 
 					this.emit("connect");
 					break;
 				case 11: {
 					if(
-						typeof data?.data !== "object"
+						typeof data?.data !== "object" && typeof data?.data !== "number"
 					) return console.log(`Received invalid packet. ID: 11.`);
 
 					if(data.data === 0) this.emit("roundStart");
 
 					this.time = data.time;
-					this.currentDrawer = this.players.find(plr => plr.id === data.data.id);
+					this.state = data.id;
 
-					if(Array.isArray(data.data?.words)) {
-						this.availableWords = data.data.words;
+					// Handle game state
+					switch(data.id) {
+						case 3: {
+							if(Array.isArray(data.data?.words)) {
+								const words = data.data.words;
 
-						this.emit("chooseWord", data.data.words);
-					} else this.availableWords = [];
+								this.availableWords = words;
 
-					if(data.id === 4 && data.data.id === this.currentDrawer?.id) this.emit("canDraw");
+								this.emit("chooseWord", words);
+							}
+							break;
+						}
+
+						case 4: {
+							this.canvas = [];
+							this.availableWords = [];
+							this.currentDrawer = this.players.find(plr => plr.id === data.data?.id);
+
+							// @ts-expect-error
+							if(data.data.id === this.currentDrawer?.id) this.emit("canDraw");
+							break;
+						}
+
+						case 5: {
+							for(const player of this.players) {
+								player.guessed = false;
+							}
+
+							// @ts-ignore
+							this.round++;
+						}
+					}
 					break;
 				}
 				case 12: {
 					if(
 						typeof data?.id !== "number" ||
-						typeof data?.val === "number"
+						typeof data?.val !== "number"
 					) return console.log(`Received invalid packet. ID: 12.`);
 
 					const setting = Object.keys(this.settings)[data.id];
 
-					this.settings[setting] = data.value;
+					this.settings[setting] = data.val;
 					break;
 				}
 				case 13:
@@ -165,13 +201,16 @@ class Client extends events {
 				case 14:
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 14.`);
 
+					// @ts-expect-error
 					this.time = data - 1;
 					break;
 				case 15: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 15.`);
 
 					const player = this.players.find(plr => plr.id === data.id);
-					if(!player) return;
+					if(!player) break;
+
+					player.guessed = true;
 
 					this.emit("playerGuessed", {
 						player,
@@ -189,7 +228,7 @@ class Client extends events {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 17.`);
 
 					const player = this.players.find(plr => plr.id === data.id);
-					if(!player) return;
+					if(!player) break;
 
 					this.owner = data.id;
 
@@ -209,10 +248,13 @@ class Client extends events {
 					this.emit("clearCanvas");
 					break;
 				case 30: {
-					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 30.`);
+					if(
+						typeof data?.id !== "number" ||
+						typeof data?.msg !== "string"
+					) return console.log(`Received invalid packet. ID: 30.`);
 
 					const player = this.players.find(plr => plr.id === data.id);
-					if(!player) return;
+					if(!player) break;
 
 					this.emit("text", {
 						player: player,
@@ -233,6 +275,7 @@ class Client extends events {
 		});
 
 		const interval = setInterval(() => {
+			// @ts-expect-error
 			if(!this.socket.connected) return clearInterval(interval);
 
 			if(this.time && this.time > 0) this.time--;
@@ -247,8 +290,10 @@ class Client extends events {
 	 * @throws
 	 */
 	sendPacket(id, data) {
-		if(!this.socket) throw Error("Socket isnt initialized yet.");
+		// @ts-expect-error
+		if(!this.socket?.connected) throw Error("Socket isnt initialized or is disconnected.");
 
+		// @ts-expect-error
 		this.socket.emit("data", {
 			id,
 			data
@@ -442,6 +487,10 @@ class Client extends events {
 	 * @throws
 	 */
 	disconnect() {
+		// @ts-expect-error
+		if(!this.socket?.connected) throw Error("Socket is already disconnected");
+
+		// @ts-expect-error
 		this.socket.disconnect();
 	}
 }

@@ -16,7 +16,7 @@ declare module "skribbler" {
 		httpHeaders?: Object
 		socketOptions?: Object
 	}
-	
+
 	export interface PlayerObject {
 		id: Number
 		name: String
@@ -26,14 +26,30 @@ declare module "skribbler" {
 		flags: Number
 	}
 
+	export interface LobbySettings {
+		language?: Number
+		maxPlayers?: Number
+		maxDrawTime?: Number
+		maxRounds?: Number
+		wordCount?: Number
+		maxHints?: Number
+		wordMode?: Number
+		// useCustomWords is initially a boolean, but when its changed, it becomes a number
+		useCustomWords?: Boolean | Number
+	}
+
 	export class Client extends events {
 		constructor(options: ClientOptions)
 
 		options: ClientOptions
-		socket: Socket
+		socket?: Socket
 
 		lobbyId?: String
-		settings: Object
+		settings: LobbySettings
+
+		state?: Number
+		round?: Number
+
 		userId?: Number
 		ownerId?: Number
 		players: Array<PlayerObject>
