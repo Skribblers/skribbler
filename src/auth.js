@@ -1,6 +1,6 @@
 // @ts-check
 const fetch = require("node-fetch");
-const io = require("socket.io-client");
+const { io } = require("socket.io-client");
 
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
 
@@ -55,7 +55,6 @@ async function joinLobby(options = {}) {
 	const serverURI = await getServerUri(options);
 
 	// Start websocket connection
-	// @ts-expect-error
 	const socket = await io(serverURI, {
 		extraHeaders: {
 			"Host": serverURI.replace("https://", ""),

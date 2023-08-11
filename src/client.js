@@ -49,7 +49,7 @@ class Client extends events {
 	userId = null;
 	ownerId = null;
 	players = [];
-	time = null;
+	time = 0;
 	currentDrawer = null;
 	availableWords = [];
 	canvas = [];
@@ -59,6 +59,7 @@ class Client extends events {
 
 		const socket = await joinLobby(this.options);
 
+		// @ts-expect-error
 		this.socket = socket;
 		this.connected = true;
 
@@ -206,7 +207,6 @@ class Client extends events {
 				case 14:
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 14.`);
 
-					// @ts-expect-error
 					this.time = data - 1;
 					break;
 				case 15: {
@@ -330,7 +330,7 @@ class Client extends events {
 
 	/**
 	 * @name votekick
-	 * @description The user to votekick. If the player gets enough votes, they will be kicked.
+	 * @description Votekick a user. If the player gets enough votes, they will be kicked.
 	 * @param {Number} userId - The ID of the user who will be getting votekicked
 	 * @throws
 	 */
@@ -378,14 +378,13 @@ class Client extends events {
 	/**
 	 * @name selectWord
 	 * @description The word to select to draw. You can listen in on the chooseWord event, which provides an array of all the possible words. The exact word or the array index number are accepted
-	 * @param {Number | String} word - The message to send
+	 * @param {Number | String} word - The word to select
 	 * @throws
 	 */
 	selectWord(word) {
 		if(typeof word !== "number" && typeof word !== "string") throw TypeError("Expected word to be type of Number or String");
 
-		// @ts-expect-error
-		if(isNaN(word)) {
+		if(typeof word === "string") {
 			for(let i = 0; i < this.availableWords.length + 1; i++) {
 				if(this.availableWords[i] === word) {
 					word = i;
@@ -467,7 +466,7 @@ class Client extends events {
 
 	/**
 	 * @name endGame
-	 * @description End the game if you are the owner of the private lobby
+	 * @description End the game if you are the host of the private lobby
 	 * @throws
 	 */
 	endGame() {

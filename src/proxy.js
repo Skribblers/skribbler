@@ -5,12 +5,12 @@ const { getServerUri } = require("./auth.js");
 // Web server
 const http = require('http');
 const { Server } = require("socket.io");
-const clientIo = require("socket.io-client");
+const { io: clientIo} = require("socket.io-client");
 
 class Proxy extends events {
 	/**
 	 * @class
-	 * @param {Object} options - Options the client should use
+	 * @param {Object} [options] - Options the client should use
 	 * @param {Number} [options.port] - The port to start the proxy on
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
 	 * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
@@ -51,7 +51,6 @@ class Proxy extends events {
 				loginData = data;
 			});
 
-			// @ts-expect-error
 			const server = await clientIo(await getServerUri(this.options));
 
 			server.on("connect", () => {

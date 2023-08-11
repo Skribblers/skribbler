@@ -54,7 +54,7 @@ declare module "skribbler" {
 		userId?: Number
 		ownerId?: Number
 		players: Array<PlayerObject>
-		time?: Number
+		time: Number
 		currentDrawer?: PlayerObject
 		availableWords: Array<String>
 		canvas: Array<Array<Number>>
