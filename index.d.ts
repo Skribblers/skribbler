@@ -43,6 +43,7 @@ declare module "skribbler" {
 
 		options: ClientOptions
 		socket?: Socket
+		connected: Boolean
 
 		lobbyId?: String
 		settings: LobbySettings

@@ -38,6 +38,7 @@ class Client extends events {
 
 	options = {};
 	socket = null;
+	connected = false;
 
 	lobbyId = null;
 	settings = {};
@@ -57,7 +58,9 @@ class Client extends events {
 		if(this.socket) throw Error("Client has already initialized.");
 
 		const socket = await joinLobby(this.options);
+
 		this.socket = socket;
+		this.connected = true;
 
 		let disconnectReason;
 		let joinErr;
@@ -70,6 +73,8 @@ class Client extends events {
 		});
 
 		socket.on("disconnect", () => {
+			this.connected = false;
+
 			this.emit("disconnect", {
 				reason: disconnectReason,
 				joinErr
@@ -275,8 +280,7 @@ class Client extends events {
 		});
 
 		const interval = setInterval(() => {
-			// @ts-expect-error
-			if(!this.socket.connected) return clearInterval(interval);
+			if(!this.connected) return clearInterval(interval);
 
 			if(this.time && this.time > 0) this.time--;
 		}, 1000);
@@ -439,6 +443,7 @@ class Client extends events {
 	 * @description Start the round if you are the owner of the private lobby
 	 * @param {Array} [customWords] - Custom words to use. Note: If there are less then 10 custom words, the server does not use the custom word list
 	 * @returns {Promise<Number | String>} startError
+	 * @async
 	 * @throws
 	 */
 	async startGame(customWords) {
@@ -489,6 +494,8 @@ class Client extends events {
 	disconnect() {
 		// @ts-expect-error
 		if(!this.socket?.connected) throw Error("Socket is already disconnected");
+
+		this.connected = false;
 
 		// @ts-expect-error
 		this.socket.disconnect();
