@@ -188,7 +188,8 @@ class Client extends events {
 						}
 
 						case 3: {
-							if(!Array.isArray(data.data?.words)) return console.log(`Received invalid packet. ID: 11`);
+							// Only handle state 3 if the client can choose a word
+							if(!Array.isArray(data.data?.words)) break;
 
 							this.availableWords = data.data.words;
 
@@ -208,7 +209,7 @@ class Client extends events {
 						}
 
 						case 5: {
-							if(!Array.isArray(data.data?.words)) return console.log(`Received invalid packet. ID: 11`);
+							if(!Array.isArray(data.data?.scores)) return console.log(`Received invalid packet. ID: 11`);
 
 							let counter = 0;
 							for(const player of this.players) {
