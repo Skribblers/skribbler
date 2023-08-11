@@ -227,6 +227,8 @@ class Client extends events {
 
 					const setting = Object.keys(this.settings)[data.id];
 
+					if(setting === "useCustomWords") data.val = data.val ? true : false;
+
 					this.settings[setting] = data.val;
 					break;
 				}

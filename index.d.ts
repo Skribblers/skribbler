@@ -34,8 +34,7 @@ declare module "skribbler" {
 		wordCount?: Number
 		maxHints?: Number
 		wordMode?: Number
-		// useCustomWords is initially a boolean, but when its changed, it becomes a number
-		useCustomWords?: Boolean | Number
+		useCustomWords?: Boolean
 	}
 
 	export class Client extends events {
