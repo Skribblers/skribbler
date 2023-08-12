@@ -3,7 +3,7 @@ const events = require("events");
 const { getServerUri } = require("./auth.js");
 
 // Web server
-const http = require('http');
+const http = require("http");
 const { Server } = require("socket.io");
 const { io: clientIo} = require("socket.io-client");
 
@@ -35,7 +35,7 @@ class Proxy extends events {
 
 		this.didInit = true;
 
-		const app = require('express')();
+		const app = require("express")();
 		const server = http.createServer(app);
 
 		const io = new Server(server, {
@@ -45,7 +45,7 @@ class Proxy extends events {
 			}
 		});
 
-		io.on('connection', async (socket) => {
+		io.on("connection", async (socket) => {
 			let loginData;
 			socket.on("login", (data) => {
 				loginData = data;

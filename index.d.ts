@@ -38,7 +38,7 @@ declare module "skribbler" {
 	}
 
 	export class Client extends events {
-		constructor(options: ClientOptions)
+		constructor(options?: ClientOptions)
 
 		options: ClientOptions
 		socket?: Socket
@@ -86,7 +86,7 @@ declare module "skribbler" {
 	}
 
 	export class Proxy extends events {
-		constructor(options: ClientOptions)
+		constructor(options?: ClientOptions)
 
 		options: ProxyOptions
 
