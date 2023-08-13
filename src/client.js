@@ -188,7 +188,10 @@ class Client extends events {
 						}
 
 						case 3: {
-							// Only handle state 3 if the client can choose a word
+							if(typeof data.data?.id !== "number") return console.log(`Received invalid packet. ID: 11`);
+							this.currentDrawer = this.players.find(plr => plr.id === data.data.id);
+
+							// Only handle rest of the code if the user can select a word to draw
 							if(!Array.isArray(data.data?.words)) break;
 
 							this.availableWords = data.data.words;
@@ -275,12 +278,13 @@ class Client extends events {
 					this.emit("closeWord", data);
 					break;
 				case 17: {
-					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 17.`);
+					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 17.`);
 
-					const player = this.players.find(plr => plr.id === data.id);
+					const player = this.players.find(plr => plr.id === data);
 					if(!player) break;
 
-					this.owner = data.id;
+					// @ts-expect-error
+					this.ownerId = data;
 
 					this.emit("newOwner", {
 						player
