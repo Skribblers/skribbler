@@ -67,7 +67,7 @@ class Server extends events {
 					typeof data.avatar[3] !== "number"
 				) return socket.disconnect(true);
 
-				if(!data.name) data.name = dictionary[Math.floor(Math.random() * dictionary.length)];
+				if(!data.name) data.name = getRandomWords(1)[0];
 				data.name.substring(0, 16);
 
 				if(!lobbies[data.lang]) lobbies[data.lang] = {};
@@ -197,7 +197,7 @@ class Server extends events {
 							id: Constants.Packets.VOTE,
 							data: {
 								id: socket.id,
-								data: data
+								vote: data
 							}
 						});
 						break;
@@ -233,19 +233,79 @@ class Server extends events {
 							lobbyData.state.id !== 3
 						) break;
 
-						lobbyData.internal.currentWord = lobbyData.internal.possibleWords[data];
-						lobbyData.state.id = 4;
+						startGame(lobbyData, io, socket.id, data);
+						break;
+					}
 
-						io.to(lobbyId).emit("data", {
-							id: Constants.Packets.UPDATE_GAME_DATA,
-							data: {
-								id: 4,
-								time: lobbyData.settings[2],
-								data: {
-									id: socket.id
-								}
-							}
+					case Constants.Packets.DRAW: {
+						if(
+							socket.id !== lobbyData.state.data.id ||
+							!Array.isArray(data) ||
+							data.length > 6
+						) break;
+
+						console.log(data);
+
+						let invalid = false;
+						for(const array of data) {
+							if(
+								(array.length === 4 || array.length === 7) &&
+								typeof array[0] === "number" &&
+								typeof array[1] === "number" &&
+								typeof array[2] === "number" &&
+								typeof array[3] === "number" &&
+								(typeof array[4] === "number" || typeof array[4] === "undefined") &&
+								(typeof array[5] === "number" || typeof array[5] === "undefined") &&
+								(typeof array[6] === "number" || typeof array[6] === "undefined")
+							) continue;
+
+							invalid = true;
+							break;
+						}
+
+						if(invalid) return;
+
+						socket.to(lobbyId).emit("data", {
+							id: Constants.Packets.DRAW,
+							data: data
 						});
+
+						lobbyData.state.data.drawCommands = lobbyData.state.data.drawCommands.concat(data);
+						break;
+					}
+
+					case Constants.Packets.CLEAR_CANVAS: {
+						if(
+							socket.id !== lobbyData.state.data.id ||
+							lobbyData.state.data.drawCommands.length === 0
+						) break;
+
+						socket.in(lobbyId).emit("data", {
+							id: Constants.Packets.CLEAR_CANVAS
+						});
+						break;
+					}
+
+					case Constants.Packets.UNDO: {
+						if(
+							typeof data !== "number" ||
+							socket.id !== lobbyData.state.data.id ||
+							lobbyData.state.data.drawCommands.length === 0 ||
+							data > lobbyData.state.data.drawCommands.length
+						) break;
+
+						lobbyData.state.data.drawCommands.splice(data);
+
+						if(lobbyData.state.data.drawCommands.length === 0) {
+							socket.to(lobbyId).emit("data", {
+								id: Constants.Packets.CLEAR_CANVAS
+							});
+						} else {
+							socket.to(lobbyId).emit("data", {
+								id: Constants.Packets.UNDO,
+								data
+							});
+						}
 						break;
 					}
 
@@ -275,12 +335,10 @@ class Server extends events {
 							}
 						});
 
-						lobbyData.internal.customWords = data.split(",");
-
 						setTimeout(() => {
-							const drawer = lobbyData.users[lobbyData.users.length - 1];
+							const drawerId = lobbyData.users[lobbyData.users.length - 1].id;
 							lobbyData.state.id = 3;
-							lobbyData.state.data.id = drawer.id;
+							lobbyData.state.data.id = drawerId;
 
 							io.in(lobbyId).emit("data", {
 								id: Constants.Packets.UPDATE_GAME_DATA,
@@ -288,23 +346,30 @@ class Server extends events {
 									id: 3,
 									time: 15,
 									data: {
-										id: drawer.id
+										id: drawerId
 									}
 								}
 							});
 
-							lobbyData.internal.possibleWords = ["test","test2","test3"];
-							io.to(drawer.id).emit("data", {
+							lobbyData.internal.possibleWords = getRandomWords(lobbyData.settings[4], lobbyData.settings[7], data.split(","));
+
+							io.to(drawerId).emit("data", {
 								id: Constants.Packets.UPDATE_GAME_DATA,
 								data: {
 									id: 3,
 									time: 15,
 									data: {
-										id: drawer.id,
-										words: ["test","test2","test3"]
+										id: drawerId,
+										words: lobbyData.internal.possibleWords
 									}
 								}
 							});
+
+							setTimeout(() => {
+								if(lobbyData.state.id !== 3) return;
+
+								startGame(lobbyData, io, drawerId);
+							}, 15000);
 						}, 2000);
 
 						lobbyData.state.time = 2;
@@ -365,6 +430,49 @@ class Server extends events {
 	}
 }
 
+function getRandomWords(count = 1, useOnlyAdditionalWords = false, additionalWords = []) {
+	const words = [];
+	const possibleWords = (useOnlyAdditionalWords && additionalWords.length > 10) ? additionalWords : dictionary.concat(additionalWords);
+
+	for(let i = 0; i < count; i++) {
+		words.push(possibleWords[Math.floor(Math.random() * possibleWords.length)]);
+	}
+
+	return words;
+}
+
+function startGame(lobbyData, io, drawerId, selectedWord = 0) {
+	lobbyData.internal.currentWord = lobbyData.internal.possibleWords[selectedWord];
+	lobbyData.state.id = 4;
+	lobbyData.state.data.word = [lobbyData.internal.currentWord.length];
+
+	io.to(lobbyData.id).emit("data", {
+		id: Constants.Packets.UPDATE_GAME_DATA,
+		data: {
+			id: 4,
+			time: lobbyData.settings[2],
+			data: {
+				id: drawerId,
+				word: [lobbyData.internal.currentWord.length],
+				hints: [],
+				drawCommands: []
+			}
+		}
+	});
+
+	io.to(drawerId).emit("data", {
+		id: Constants.Packets.UPDATE_GAME_DATA,
+		data: {
+			id: 4,
+			time: lobbyData.settings[2],
+			data: {
+				id: drawerId,
+				word: lobbyData.internal.currentWord
+			}
+		}
+	});
+}
+
 function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0) {
 	const lobbyId = crypto.randomBytes(8).toString("base64url");
 
@@ -380,7 +488,7 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0) {
 			12,
 			80,
 			3,
-			2,
+			3,
 			2,
 			0,
 			0
