@@ -76,7 +76,7 @@ class Server extends events {
 
 				// Try to find a lobby for the user
 				if(data.create) {
-					lobbyId = createLobby(Constants.LobbyType.PRIVATE, data.lang);
+					lobbyId = createLobby(Constants.LobbyType.PRIVATE, data.lang, io);
 
 					lobbies[data.lang][lobbyId].owner = userId;
 				} else {
@@ -94,7 +94,7 @@ class Server extends events {
 					}
 
 					// If no lobby was found, then create one for the user
-					if(!lobbyId) lobbyId = createLobby(Constants.LobbyType.PUBLIC, data.lang);
+					if(!lobbyId) lobbyId = createLobby(Constants.LobbyType.PUBLIC, data.lang, io);
 				}
 
 				lobbyData = lobbies[data.lang][lobbyId];
@@ -103,6 +103,11 @@ class Server extends events {
 				// (such as lobbyData.users.length) would result in a crahs
 				if(!lobbyData?.users) {
 					socket.emit("joinerr", Constants.JoinError.ROOM_NOT_FOUND);
+					return socket.disconnect(true);
+				}
+
+				if(lobbyData.internal.blockedIps.includes(socket.handshake.address)) {
+					socket.emit("joinerr", Constants.JoinError.BANNED_FROM_ROOM);
 					return socket.disconnect(true);
 				}
 
@@ -141,6 +146,20 @@ class Server extends events {
 						me: userId
 					}
 				});
+
+				if(lobbyData.state.id === Constants.GameState.WAITING_FOR_PLAYERS && lobbyData.users.length > 1) {
+					lobbyData.state.id = 2;
+					lobbyData.state.time = 2;
+
+					io.in(lobbyId).emit("data", {
+						id: Constants.Packets.UPDATE_GAME_DATA,
+						data: {
+							id: Constants.GameState.CURRENT_ROUND,
+							time: 2,
+							data: lobbyData.round
+						}
+					});
+				}
 			});
 
 			socket.on("data", (packet) => {
@@ -335,49 +354,39 @@ class Server extends events {
 							}
 						});
 
-						setTimeout(() => {
-							const drawerId = lobbyData.users[lobbyData.users.length - 1].id;
-							lobbyData.state.id = 3;
-							lobbyData.state.data.id = drawerId;
-
-							io.in(lobbyId).emit("data", {
-								id: Constants.Packets.UPDATE_GAME_DATA,
-								data: {
-									id: 3,
-									time: 15,
-									data: {
-										id: drawerId
-									}
-								}
-							});
-
-							lobbyData.internal.possibleWords = getRandomWords(lobbyData.settings[4], lobbyData.settings[7], data.split(","));
-
-							io.to(drawerId).emit("data", {
-								id: Constants.Packets.UPDATE_GAME_DATA,
-								data: {
-									id: 3,
-									time: 15,
-									data: {
-										id: drawerId,
-										words: lobbyData.internal.possibleWords
-									}
-								}
-							});
-
-							setTimeout(() => {
-								if(lobbyData.state.id !== 3) return;
-
-								startGame(lobbyData, io, drawerId);
-							}, 15000);
-						}, 2000);
-
+						lobbyData.internal.customWords = data.split(", ");
+						lobbyData.state.id = 2;
 						lobbyData.state.time = 2;
 						break;
 					}
 
 					case Constants.Packets.TEXT: {
 						if(typeof data !== "string") break;
+
+						const player = lobbyData.users.find(usr => usr.id === userId);
+						if(
+							lobbyData.internal.currentWord === data &&
+							lobbyData.state.id === 4 &&
+							lobbyData.state.data.id !== userId &&
+							!player.guessed
+						) {
+							player.guessed = true;
+							socket.to(lobbyId).emit("data", {
+								id: Constants.Packets.PLAYER_GUESSED,
+								data: {
+									id: userId
+								}
+							});
+
+							socket.emit("data", {
+								id: Constants.Packets.PLAYER_GUESSED,
+								data: {
+									id: userId,
+									word: lobbyData.internal.currentWord
+								}
+							});
+							break;
+						}
 
 						io.in(lobbyId).emit("data", {
 							id: Constants.Packets.TEXT,
@@ -394,10 +403,12 @@ class Server extends events {
 			socket.on("disconnect", () => {
 				if(!userId || !lobbyData?.users) return;
 
-				const index = lobbyData.users.find(usr => usr.id === userId);
+				const index = lobbyData.users.findIndex(usr => usr.id === userId);
 				if(index === -1) return;
 
 				lobbyData.users.splice(index, 1);
+
+				if(lobbyData.users.length === 0) return lobbies[lobbyData.settings[0]][lobbyData.id] = undefined;
 
 				socket.to(lobbyId).emit("data", {
 					id: Constants.Packets.PLAYER_LEAVE,
@@ -409,8 +420,6 @@ class Server extends events {
 
 				if(lobbyData.owner === socket.id) {
 					const newOwner = lobbyData.users[0]?.id;
-
-					if(!newOwner) return lobbies[lobbyData.settings[0]][lobbyData.id] = undefined;
 
 					lobbyData.owner = newOwner;
 
@@ -442,8 +451,11 @@ function getRandomWords(count = 1, useOnlyAdditionalWords = false, additionalWor
 }
 
 function startGame(lobbyData, io, drawerId, selectedWord = 0) {
+	if(!drawerId) drawerId = lobbyData.users[lobbyData.users.length - 1].id;
+
 	lobbyData.internal.currentWord = lobbyData.internal.possibleWords[selectedWord];
 	lobbyData.state.id = 4;
+	lobbyData.state.time = lobbyData.settings[2];
 	lobbyData.state.data.word = [lobbyData.internal.currentWord.length];
 
 	io.to(lobbyData.id).emit("data", {
@@ -473,10 +485,10 @@ function startGame(lobbyData, io, drawerId, selectedWord = 0) {
 	});
 }
 
-function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0) {
-	const lobbyId = crypto.randomBytes(8).toString("base64url");
+function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
+	const lobbyId = "a"; // crypto.randomBytes(8).toString("base64url");
 
-	lobbies[lang][lobbyId] = {
+	const lobbyData = {
 		internal: {
 			blockedIps: [],
 			customWords: [],
@@ -509,6 +521,91 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0) {
 			}
 		}
 	};
+
+	lobbies[lang][lobbyId] = lobbyData;
+
+	const interval = setInterval(() => {
+		if(!lobbyData) clearInterval(interval);
+
+		if(lobbyData.state.time > 0) return lobbyData.state.time--;
+
+		switch(lobbyData.state.id) {
+			case 2: {
+				// @ts-expect-error
+				const drawerId = lobbyData.users[lobbyData.users.length - 1].id;
+
+				lobbyData.state.id = 3;
+				lobbyData.state.time = 15;
+				lobbyData.state.data.id = drawerId;
+
+				io.in(lobbyId).emit("data", {
+					id: Constants.Packets.UPDATE_GAME_DATA,
+					data: {
+						id: 3,
+						time: lobbyData.state.time,
+						data: {
+							id: drawerId
+						}
+					}
+				});
+
+				// @ts-expect-error
+				lobbyData.internal.possibleWords = getRandomWords(lobbyData.settings[4], lobbyData.settings[7], lobbyData.internal.customWords);
+
+				io.to(drawerId).emit("data", {
+					id: Constants.Packets.UPDATE_GAME_DATA,
+					data: {
+						id: 3,
+						time: lobbyData.state.time,
+						data: {
+							id: drawerId,
+							words: lobbyData.internal.possibleWords
+						}
+					}
+				});
+				break;
+			}
+
+			case 3: {
+				startGame(lobbyData, io);
+				break;
+			}
+
+			case 4: {
+				lobbyData.state.id = 5;
+				lobbyData.state.time = 3;
+
+				io.in(lobbyId).emit("data", {
+					id: Constants.Packets.UPDATE_GAME_DATA,
+					data: {
+						id: 5,
+						time: lobbyData.state.time,
+						data: {
+							reason: 0,
+							word: lobbyData.internal.currentWord,
+							scores: []
+						}
+					}
+				});
+
+				for(const user of lobbyData.users) {
+					// @ts-expect-error
+					user.guessed = false;
+				}
+
+				lobbyData.state.data.drawCommands = [];
+				lobbyData.state.data.word = [];
+				lobbyData.state.data.hints = [];
+
+				break;
+			}
+
+			case 5: {
+				lobbyData.state.id = 2;
+				lobbyData.state.time = 0;
+			}
+		}
+	}, 1000);
 
 	return lobbyId;
 }
