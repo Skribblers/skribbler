@@ -48,7 +48,7 @@ declare module "skribbler" {
 		settings: LobbySettings
 
 		state?: Number
-		round?: Number
+		round: Number
 
 		userId?: Number
 		ownerId?: Number

@@ -2,6 +2,8 @@
 const events = require("events");
 const { joinLobby } = require("./auth.js");
 
+const Constants = require("./constants.js");
+
 class Client extends events {
 	/**
 	 * @class
@@ -44,7 +46,7 @@ class Client extends events {
 	settings = {};
 
 	state = null;
-	round = null;
+	round = 0;
 
 	userId = null;
 	ownerId = null;
@@ -87,14 +89,14 @@ class Client extends events {
 			if(data === null) return;
 
 			switch(id) {
-				case 1: {
+				case Constants.Packets.PLAYER_JOIN: {
 					if(typeof data !== "object") return console.log(`Received invalid packet. ID: 1.`);
 
 					this.players.push(data);
 					this.emit("playerJoin", data);
 					break;
 				}
-				case 2: {
+				case Constants.Packets.PLAYER_LEAVE: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data.reason !== "number"
@@ -112,7 +114,7 @@ class Client extends events {
 
 					break;
 				}
-				case 8: {
+				case Constants.Packets.VOTE: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.vote !== "number"
@@ -127,7 +129,7 @@ class Client extends events {
 					});
 					break;
 				}
-				case 10:
+				case Constants.Packets.LOBBY_DATA:
 					if(
 						!Array.isArray(data?.settings) ||
 						!Array.isArray(data?.users)
@@ -159,7 +161,7 @@ class Client extends events {
 
 					this.emit("connect");
 					break;
-				case 11: {
+				case Constants.Packets.UPDATE_GAME_DATA: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.time !== "number"
@@ -170,7 +172,7 @@ class Client extends events {
 
 					// Handle game state
 					switch(data.id) {
-						case 2: {
+						case Constants.GameState.CURRENT_ROUND: {
 							if(typeof data.data !== "number") return console.log(`Received invalid packet. ID: 11`);
 
 							// @ts-ignore
@@ -187,7 +189,7 @@ class Client extends events {
 							break;
 						}
 
-						case 3: {
+						case Constants.GameState.USER_PICKING_WORD: {
 							if(typeof data.data?.id !== "number") return console.log(`Received invalid packet. ID: 11`);
 							this.currentDrawer = this.players.find(plr => plr.id === data.data.id);
 
@@ -200,7 +202,7 @@ class Client extends events {
 							break;
 						}
 
-						case 4: {
+						case Constants.GameState.CAN_DRAW: {
 							if(typeof data.data !== "object") return console.log(`Received invalid packet. ID: 11`);
 
 							this.canvas = [];
@@ -211,7 +213,7 @@ class Client extends events {
 							break;
 						}
 
-						case 5: {
+						case Constants.GameState.DRAW_RESULTS: {
 							if(!Array.isArray(data.data?.scores)) return console.log(`Received invalid packet. ID: 11`);
 
 							let counter = 0;
@@ -225,7 +227,10 @@ class Client extends events {
 						}
 
 						// When a private lobby's game ends, reset all the player's scores
-						case 7: {
+						case Constants.GameState.IN_GAME_WAITING_ROOM: {
+							this.canvas = [];
+							this.round = 0;
+
 							for(const player of this.players) {
 								player.score = 0;
 							}
@@ -233,7 +238,7 @@ class Client extends events {
 					}
 					break;
 				}
-				case 12: {
+				case Constants.Packets.UPDATE_SETTINGS: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.val !== "number"
@@ -247,17 +252,17 @@ class Client extends events {
 					this.settings[setting] = data.val;
 					break;
 				}
-				case 13:
+				case Constants.Packets.REVEAL_HINT:
 					if(!Array.isArray(data)) return console.log(`Received invalid packet. ID: 13.`);
 
 					this.emit("hintRevealed", data);
 					break;
-				case 14:
+				case Constants.Packets.UPDATE_TIME:
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 14.`);
 
 					this.time = data - 1;
 					break;
-				case 15: {
+				case Constants.Packets.PLAYER_GUESSED: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 15.`);
 
 					const player = this.players.find(plr => plr.id === data.id);
@@ -272,12 +277,12 @@ class Client extends events {
 					});
 					break;
 				}
-				case 16:
+				case Constants.Packets.CLOSE_WORD:
 					if(typeof data !== "string") return console.log(`Received invalid packet. ID: 16.`);
 
 					this.emit("closeWord", data);
 					break;
-				case 17: {
+				case Constants.Packets.SET_OWNER: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 17.`);
 
 					const player = this.players.find(plr => plr.id === data);
@@ -291,17 +296,17 @@ class Client extends events {
 					});
 					break;
 				}
-				case 19:
+				case Constants.Packets.DRAW:
 					this.canvas = this.canvas.concat(data);
 
 					this.emit("draw", data);
 					break;
-				case 20:
+				case Constants.Packets.CLEAR_CANVAS:
 					this.canvas = [];
 
 					this.emit("clearCanvas");
 					break;
-				case 21: {
+				case Constants.Packets.UNDO: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 21.`);
 
 					this.canvas.splice(data);
@@ -309,7 +314,7 @@ class Client extends events {
 					this.emit("undo", data);
 					break;
 				}
-				case 30: {
+				case Constants.Packets.TEXT: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.msg !== "string"
@@ -324,7 +329,7 @@ class Client extends events {
 					});
 					break;
 				}
-				case 31: {
+				case Constants.Packets.GAME_START_ERROR: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 31.`);
 
 					this.emit("startError", data.id);
