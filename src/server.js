@@ -118,6 +118,8 @@ class Server extends events {
 
 				socket.join(lobbyId);
 
+				lobbyData.internal.ipMap[userId] = socket.handshake.address;
+
 				const userData = {
 					id: userId,
 					name: data.name,
@@ -182,7 +184,7 @@ class Server extends events {
 						const index = lobbyData.users.find(usr => usr.id === data);
 						if(index === -1) break;
 
-						const LeaveReason = id === Constants.Packets.HOST_KICK ? Constants.LeaveReason.KICKED : Constants.LeaveReason.BANNED;
+						const LeaveReason = id === Constants.Packets.HOST_BAN ? Constants.LeaveReason.BANNED : Constants.LeaveReason.KICKED;
 
 						io.in(lobbyId).emit("data", {
 							id: Constants.Packets.PLAYER_LEAVE,
@@ -195,7 +197,9 @@ class Server extends events {
 						io.in(data).emit("reason", LeaveReason);
 						io.in(data).disconnectSockets(true);
 
-						lobbyData.users.splice(index, 1);
+						if(id === Constants.Packets.HOST_BAN) {
+							lobbyData.internal.blockedIps.push(lobbyData.internal.ipMap[data]);
+						}
 						break;
 					}
 
@@ -364,6 +368,7 @@ class Server extends events {
 						if(typeof data !== "string") break;
 
 						const player = lobbyData.users.find(usr => usr.id === userId);
+
 						if(
 							lobbyData.internal.currentWord === data &&
 							lobbyData.state.id === 4 &&
@@ -385,6 +390,14 @@ class Server extends events {
 									word: lobbyData.internal.currentWord
 								}
 							});
+
+							lobbyData.internal.playersGuessed++;
+
+							// -1 to account for the current person drawing
+							if(lobbyData.internal.playersGuessed + 1 >= lobbyData.users.length) {
+								lobbyData.internal.everyoneGuessed = true;
+								lobbyData.state.time = 0;
+							}
 							break;
 						}
 
@@ -427,6 +440,11 @@ class Server extends events {
 						id: Constants.Packets.SET_OWNER,
 						data: newOwner
 					});
+				}
+
+				if(lobbyData.state.id === 4 && userId === lobbyData.state.data.id) {
+					lobbyData.internal.drawerLeft = true;
+					lobbyData.state.time = 0;
 				}
 			});
 		});
@@ -490,10 +508,14 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 
 	const lobbyData = {
 		internal: {
+			ipMap: {},
 			blockedIps: [],
 			customWords: [],
 			possibleWords: [],
-			currentWord: ""
+			currentWord: "",
+			drawerLeft: false,
+			everyoneGuessed: false,
+			playersGuessed: 0
 		},
 		settings: [
 			lang,
@@ -530,7 +552,7 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 		if(lobbyData.state.time > 0) return lobbyData.state.time--;
 
 		switch(lobbyData.state.id) {
-			case 2: {
+			case Constants.GameState.CURRENT_ROUND: {
 				// @ts-expect-error
 				const drawerId = lobbyData.users[lobbyData.users.length - 1].id;
 
@@ -566,14 +588,16 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 				break;
 			}
 
-			case 3: {
+			case Constants.GameState.USER_PICKING_WORD: {
 				startGame(lobbyData, io);
 				break;
 			}
 
-			case 4: {
-				lobbyData.state.id = 5;
-				lobbyData.state.time = 3;
+			case Constants.GameState.CAN_DRAW: {
+				let endReason;
+				if(lobbyData.internal.drawerLeft) endReason = Constants.DrawResultsReason.DRAWER_LEFT;
+					else if(lobbyData.internal.everyoneGuessed) endReason = Constants.DrawResultsReason.EVERYONE_GUESSED;
+					else endReason = Constants.DrawResultsReason.TIME_IS_UP;
 
 				io.in(lobbyId).emit("data", {
 					id: Constants.Packets.UPDATE_GAME_DATA,
@@ -581,7 +605,7 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 						id: 5,
 						time: lobbyData.state.time,
 						data: {
-							reason: 0,
+							reason: endReason,
 							word: lobbyData.internal.currentWord,
 							scores: []
 						}
@@ -596,13 +620,32 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 				lobbyData.state.data.drawCommands = [];
 				lobbyData.state.data.word = [];
 				lobbyData.state.data.hints = [];
+				
+				lobbyData.internal.everyoneGuessed = false;
+				lobbyData.internal.drawerLeft = false;
+				lobbyData.internal.playersGuessed = 0;
 
+				lobbyData.state.time = 3;
+				if(lobbyData.users.length === 1) {
+					lobbyData.state.id = lobbyData.type === Constants.LobbyType.PUBLIC ? Constants.GameState.WAITING_FOR_PLAYERS : Constants.GameState.IN_GAME_WAITING_ROOM;
+
+					setTimeout(() => {
+						io.in(lobbyId).emit("data", {
+							id: Constants.Packets.UPDATE_GAME_DATA,
+							data: {
+								id: lobbyData.state.id,
+								time: 0
+							}
+						});
+					}, 3000);
+				} else lobbyData.state.id = 5;
 				break;
 			}
 
-			case 5: {
+			case Constants.GameState.DRAW_RESULTS: {
 				lobbyData.state.id = 2;
 				lobbyData.state.time = 0;
+				break;
 			}
 		}
 	}, 1000);

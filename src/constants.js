@@ -64,11 +64,18 @@ const GameStartError = {
     "SERVER_RESTART_SOON": 100
 };
 
+const DrawResultsReason = {
+    "EVERYONE_GUESSED": 0,
+    "TIME_IS_UP": 1,
+    "DRAWER_LEFT": 2
+};
+
 module.exports = {
     Packets,
     LobbyType,
     LeaveReason,
     JoinError,
     GameState,
-    GameStartError
+    GameStartError,
+    DrawResultsReason
 };
