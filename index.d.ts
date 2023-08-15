@@ -13,6 +13,7 @@ declare module "skribbler" {
 		lobbyCode?: String
 		createPrivateRoom?: Boolean
 		language?: Number | String
+		serverURL?: String
 		httpHeaders?: Object
 		socketOptions?: Object
 	}
@@ -82,6 +83,7 @@ declare module "skribbler" {
 		port?: Number
 		lobbyCode?: String
 		language?: Number | String
+		serverURL?: String
 		httpHeaders?: Object
 	}
 

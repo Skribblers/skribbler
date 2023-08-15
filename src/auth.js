@@ -8,11 +8,14 @@ const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
  * @param {Object} [options] - Options the client should use
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
+ * @param {string} [options.serverURL] - The server to log into. This can be used in combination with a Proxy or a custom Server
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
 async function getServerUri(options = {}) {
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
+
+	if(options.serverURL) return options.serverURL;
 
 	// @ts-expect-error
 	const request = await fetch("https://skribbl.io:3000/play", {
@@ -48,6 +51,7 @@ async function getServerUri(options = {}) {
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
+ * @param {string} [options.serverURL] - The server to log into. This can be used in combination with a Proxy or a custom Server
  * @param {Object} [options.httpHeaders] - HTTP headers to use
  * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */
@@ -77,7 +81,7 @@ async function joinLobby(options = {}) {
 		socket.emit("login", {
 			join: options.lobbyCode ?? (options.createPrivateRoom ? 0 : ""),
 			create: options.createPrivateRoom ? 1 : 0,
-			name: options.name,
+			name: options.name ?? "",
 			lang: String(options.language),
 			avatar: options.avatar
 		});

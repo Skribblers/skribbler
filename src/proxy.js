@@ -14,6 +14,7 @@ class Proxy extends events {
 	 * @param {Number} [options.port] - The port to start the proxy on
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
 	 * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
+	 * @param {string} [options.serverURL] - The server to log into. This can be used with a custom Server
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
 	 * @throws
 	*/
