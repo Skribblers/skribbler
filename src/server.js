@@ -60,14 +60,17 @@ class Server extends events {
 					typeof data.create !== "number" ||
 					typeof data.name !== "string" ||
 					typeof data.lang !== "string" ||
+					Number(data.lang) > 27 ||
 					typeof data.avatar[0] !== "number" ||
 					typeof data.avatar[1] !== "number" ||
 					typeof data.avatar[2] !== "number" ||
 					typeof data.avatar[3] !== "number"
-				) return socket.disconnect();
+				) return socket.disconnect(true);
 
 				if(!data.name) data.name = dictionary[Math.floor(Math.random() * dictionary.length)];
 				data.name.substring(0, 16);
+
+				if(!lobbies[data.lang]) lobbies[data.lang] = {};
 
 				if(Number(data.lang) > 27) data.lang = "0";
 
@@ -83,7 +86,7 @@ class Server extends events {
 						for(const lobby in lobbies[data.lang]) {
 							const lobbyData = lobbies[data.lang][lobby];
 
-							if(lobbyData.type === Constants.LobbyType.PRIVATE && lobbyData.players.length >= lobbyData.settings[1]) continue;
+							if(lobbyData.type === Constants.LobbyType.PRIVATE && lobbyData.users.length >= lobbyData.settings[1]) continue;
 
 							lobbyId = lobby;
 							break;
@@ -95,6 +98,19 @@ class Server extends events {
 				}
 
 				lobbyData = lobbies[data.lang][lobbyId];
+				// The reason we check lobbyData's type is because stuff like __proto__ can be passed in as the room code
+				// The property does exist on the object, which makes lobbyData valid, but any properties accesed
+				// (such as lobbyData.users.length) would result in a crahs
+				if(!lobbyData?.users) {
+					socket.emit("joinerr", Constants.JoinError.ROOM_NOT_FOUND);
+					return socket.disconnect(true);
+				}
+
+				if(lobbyData.users.length >= lobbyData.settings[1]) {
+					socket.emit("joinerr", Constants.JoinError.ROOM_FULL);
+					return socket.disconnect(true);
+				}
+
 				socket.join(lobbyId);
 
 				const userData = {
@@ -105,7 +121,8 @@ class Server extends events {
 					guessed: false,
 					flags: 0,
 					// === Internal Usage ===
-					votekicks: 0
+					votekicks: 0,
+					didVote: false
 				};
 
 				lobbyData.users.push(userData);
@@ -126,57 +143,63 @@ class Server extends events {
 				});
 			});
 
-			socket.on("data", ({id, data}) => {
+			socket.on("data", (packet) => {
 				if(
-					typeof id !== "number"
-				) return socket.disconnect();
+					typeof packet?.id !== "number" ||
+					packet?.data === null
+				) return socket.disconnect(true);
+
+				const { id, data } = packet;
 
 				switch(id) {
-					case Constants.Packets.HOST_KICK: {
+					case Constants.Packets.HOST_KICK:
+					case Constants.Packets.HOST_BAN: {
 						if(
 							typeof data !== "string" ||
-							socket.id !== lobbyData.owner 
+							socket.id !== lobbyData.owner ||
+							socket.id !== userId
 						) break;
 
 						const index = lobbyData.users.find(usr => usr.id === data);
 						if(index === -1) break;
 
+						const LeaveReason = id === Constants.Packets.HOST_KICK ? Constants.LeaveReason.KICKED : Constants.LeaveReason.BANNED;
+
 						io.in(lobbyId).emit("data", {
 							id: Constants.Packets.PLAYER_LEAVE,
 							data: {
 								id: data,
-								reason: Constants.LeaveReason.KICKED
+								reason: LeaveReason
 							}
 						});
 
-						io.in(data).emit("reason", Constants.LeaveReason.BANNED);
+						io.in(data).emit("reason", LeaveReason);
 						io.in(data).disconnectSockets(true);
 
 						lobbyData.users.splice(index, 1);
 						break;
 					}
 
-					case Constants.Packets.HOST_BAN: {
+					case Constants.Packets.VOTE: {
 						if(
-							typeof data !== "string" ||
-							socket.id !== lobbyData.owner 
+							typeof data !== "number" ||
+							data < 0 ||
+							data > 1 ||
+							lobbyData.state.id !== 4
 						) break;
 
-						const index = lobbyData.users.find(usr => usr.id === data);
-						if(index === -1) break;
+						const player = lobbyData.users.find(usr => usr.id === socket.id);
+						if(player.didVote) break;
+
+						player.didVote = true;
 
 						io.in(lobbyId).emit("data", {
-							id: Constants.Packets.PLAYER_LEAVE,
+							id: Constants.Packets.VOTE,
 							data: {
-								id: data,
-								reason: Constants.LeaveReason.KICKED
+								id: socket.id,
+								data: data
 							}
 						});
-
-						io.in(data).emit("reason", Constants.LeaveReason.BANNED);
-						io.in(data).disconnectSockets(true);
-
-						lobbyData.users.splice(index, 1);
 						break;
 					}
 
@@ -185,6 +208,7 @@ class Server extends events {
 							typeof data?.id !== "string" ||
 							typeof data?.val !== "string" ||
 							socket.id !== lobbyData.owner,
+							lobbyData.state.id !== 7 ||
 							data.id < 0 || data.id > lobbyData.settings.length
 						) break;
 
@@ -197,6 +221,93 @@ class Server extends events {
 						});
 
 						lobbyData.settings[Number(data.id)] = Number(data.val);
+						break;
+					}
+
+					case Constants.Packets.SELECT_WORD: {
+						if(
+							typeof data !== "number" ||
+							data < 0 ||
+							data > lobbyData.settings[4] ||
+							socket.id !== lobbyData.state.data.id ||
+							lobbyData.state.id !== 3
+						) break;
+
+						lobbyData.internal.currentWord = lobbyData.internal.possibleWords[data];
+						lobbyData.state.id = 4;
+
+						io.to(lobbyId).emit("data", {
+							id: Constants.Packets.UPDATE_GAME_DATA,
+							data: {
+								id: 4,
+								time: lobbyData.settings[2],
+								data: {
+									id: socket.id
+								}
+							}
+						});
+						break;
+					}
+
+					case Constants.Packets.REQUEST_GAME_START: {
+						if(
+							typeof data !== "string" ||
+							socket.id !== lobbyData.owner ||
+							lobbyData.state.id !== 7
+						) break;
+
+						if(lobbyData.users.length < 2) {
+							socket.emit("data", {
+								id: Constants.Packets.GAME_START_ERROR,
+								data: {
+									id: Constants.GameStartError.NOT_ENOUGH_PLAYERS
+								}
+							});
+							break;
+						}
+
+						io.in(lobbyId).emit("data", {
+							id: Constants.Packets.UPDATE_GAME_DATA,
+							data: {
+								id: Constants.GameState.CURRENT_ROUND,
+								time: 2,
+								data: lobbyData.round
+							}
+						});
+
+						lobbyData.internal.customWords = data.split(",");
+
+						setTimeout(() => {
+							const drawer = lobbyData.users[lobbyData.users.length - 1];
+							lobbyData.state.id = 3;
+							lobbyData.state.data.id = drawer.id;
+
+							io.in(lobbyId).emit("data", {
+								id: Constants.Packets.UPDATE_GAME_DATA,
+								data: {
+									id: 3,
+									time: 15,
+									data: {
+										id: drawer.id
+									}
+								}
+							});
+
+							lobbyData.internal.possibleWords = ["test","test2","test3"];
+							io.to(drawer.id).emit("data", {
+								id: Constants.Packets.UPDATE_GAME_DATA,
+								data: {
+									id: 3,
+									time: 15,
+									data: {
+										id: drawer.id,
+										words: ["test","test2","test3"]
+									}
+								}
+							});
+						}, 2000);
+
+						lobbyData.state.time = 2;
 						break;
 					}
 
@@ -216,9 +327,12 @@ class Server extends events {
 			});
 
 			socket.on("disconnect", () => {
-				if(!userId) return;
+				if(!userId || !lobbyData?.users) return;
 
-				lobbyData.users.splice(userId, 1);
+				const index = lobbyData.users.find(usr => usr.id === userId);
+				if(index === -1) return;
+
+				lobbyData.users.splice(index, 1);
 
 				socket.to(lobbyId).emit("data", {
 					id: Constants.Packets.PLAYER_LEAVE,
@@ -227,6 +341,19 @@ class Server extends events {
 						reason: Constants.LeaveReason.DISCONNECT
 					}
 				});
+
+				if(lobbyData.owner === socket.id) {
+					const newOwner = lobbyData.users[0]?.id;
+
+					if(!newOwner) return lobbies[lobbyData.settings[0]][lobbyData.id] = undefined;
+
+					lobbyData.owner = newOwner;
+
+					socket.to(lobbyId).emit("data", {
+						id: Constants.Packets.SET_OWNER,
+						data: newOwner
+					});
+				}
 			});
 		});
 
@@ -241,11 +368,12 @@ class Server extends events {
 function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0) {
 	const lobbyId = crypto.randomBytes(8).toString("base64url");
 
-	if(!lobbies[lang]) lobbies[lang] = {};
-
 	lobbies[lang][lobbyId] = {
 		internal: {
-			blockedIps: []
+			blockedIps: [],
+			customWords: [],
+			possibleWords: [],
+			currentWord: ""
 		},
 		settings: [
 			lang,
@@ -266,7 +394,7 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0) {
 			id: type === Constants.LobbyType.PUBLIC ? 0 : 7,
 			time: 0,
 			data: {
-				id: -1,
+				id: "",
 				word: [],
 				hints: [],
 				drawCommands: []

@@ -37,6 +37,17 @@ const LeaveReason = {
     "BANNED": 2
 };
 
+const JoinError = {
+    "ROOM_NOT_FOUND": 1,
+    "ROOM_FULL": 2,
+    "KICK_COOLDOWN": 3,
+    "BANNED_FROM_ROOM": 4,
+    "JOINING_ROOMS_TOO_QUICKLY": 5,
+    "ALREADY_CONNECTED": 100,
+    "TOO_MANY_IP_CONNECTIONS": 200,
+    "KICKED_TOO_MANY_TIMES": 300
+};
+
 const GameState = {
     "WAITING_FOR_PLAYERS": 0,
     "GAME_STARTING_SOON": 1,
@@ -48,9 +59,16 @@ const GameState = {
     "IN_GAME_WAITING_ROOM": 7
 };
 
+const GameStartError = {
+    "NOT_ENOUGH_PLAYERS": 0,
+    "SERVER_RESTART_SOON": 100
+};
+
 module.exports = {
+    Packets,
     LobbyType,
     LeaveReason,
-    Packets,
-    GameState
+    JoinError,
+    GameState,
+    GameStartError
 };
