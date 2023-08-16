@@ -17,10 +17,19 @@ class Server extends events {
 	 * @class
 	 * @param {Object} [options] - Options the client should use
 	 * @param {Number} [options.port] - The port to start the server on
+	 * @param {Boolean} [options.reverseDrawOrder] - Should the draw order be reversed 
+	 * @param {Object} [options.defaultSettings] - Default settings for each lobby
+	 * @param {Number} [options.defaultSettings.maxPlayerCount] - Default max player count
+	 * @param {Number} [options.defaultSettings.maxDrawTime] - Default max draw time
+	 * @param {Number} [options.defaultSettings.totalRounds] - Default max rounds
+	 * @param {Number} [options.defaultSettings.wordCount] - Default word count for each player
+	 * @param {Number} [options.defaultSettings.wordMode] - Default word mode. As of now, only 0 and 1 are supported
 	 * @throws
 	*/
 	constructor(options = {}) {
 		super();
+
+		if(!options.defaultSettings) options.defaultSettings = {};
 
 		if(typeof options !== "object") throw TypeError("Client options is not an object.");
 
@@ -76,7 +85,7 @@ class Server extends events {
 
 				// Try to find a lobby for the user
 				if(data.create) {
-					lobbyId = createLobby(Constants.LobbyType.PRIVATE, data.lang, io);
+					lobbyId = createLobby(this.options, Constants.LobbyType.PRIVATE, data.lang, io);
 
 					lobbies[data.lang][lobbyId].owner = userId;
 				} else {
@@ -94,7 +103,7 @@ class Server extends events {
 					}
 
 					// If no lobby was found, then create one for the user
-					if(!lobbyId) lobbyId = createLobby(Constants.LobbyType.PUBLIC, data.lang, io);
+					if(!lobbyId) lobbyId = createLobby(this.options, Constants.LobbyType.PUBLIC, data.lang, io);
 				}
 
 				lobbyData = lobbies[data.lang][lobbyId];
@@ -129,7 +138,8 @@ class Server extends events {
 					flags: 0,
 					// === Internal Usage ===
 					votekicks: 0,
-					didVote: false
+					didVote: false,
+					hasDrawn: false
 				};
 
 				lobbyData.users.push(userData);
@@ -256,7 +266,7 @@ class Server extends events {
 							lobbyData.state.id !== 3
 						) break;
 
-						startGame(lobbyData, io, socket.id, data);
+						startGame(this.options, lobbyData, io, data);
 						break;
 					}
 
@@ -266,8 +276,6 @@ class Server extends events {
 							!Array.isArray(data) ||
 							data.length > 6
 						) break;
-
-						console.log(data);
 
 						let invalid = false;
 						for(const array of data) {
@@ -446,6 +454,11 @@ class Server extends events {
 					lobbyData.internal.drawerLeft = true;
 					lobbyData.state.time = 0;
 				}
+
+				if(lobbyData.state.id === 3 && userId === lobbyData.state.data.id) {
+					lobbyData.state.id = 2;
+					lobbyData.state.time = 0;
+				}
 			});
 		});
 
@@ -468,13 +481,14 @@ function getRandomWords(count = 1, useOnlyAdditionalWords = false, additionalWor
 	return words;
 }
 
-function startGame(lobbyData, io, drawerId, selectedWord = 0) {
-	if(!drawerId) drawerId = lobbyData.users[lobbyData.users.length - 1].id;
+function startGame(options, lobbyData, io, selectedWord = 0) {
+	const drawer = getNextDrawer(lobbyData.users, options.reverseDrawOrder);
+	drawer.hasDrawn = true;
 
 	lobbyData.internal.currentWord = lobbyData.internal.possibleWords[selectedWord];
 	lobbyData.state.id = 4;
 	lobbyData.state.time = lobbyData.settings[2];
-	lobbyData.state.data.word = [lobbyData.internal.currentWord.length];
+	lobbyData.state.data.word = lobbyData.settings[6] === Constants.WordMode.HIDDEN ? [] : [lobbyData.internal.currentWord.length];
 
 	io.to(lobbyData.id).emit("data", {
 		id: Constants.Packets.UPDATE_GAME_DATA,
@@ -482,7 +496,7 @@ function startGame(lobbyData, io, drawerId, selectedWord = 0) {
 			id: 4,
 			time: lobbyData.settings[2],
 			data: {
-				id: drawerId,
+				id: drawer.id,
 				word: [lobbyData.internal.currentWord.length],
 				hints: [],
 				drawCommands: []
@@ -490,20 +504,20 @@ function startGame(lobbyData, io, drawerId, selectedWord = 0) {
 		}
 	});
 
-	io.to(drawerId).emit("data", {
+	io.to(drawer.id).emit("data", {
 		id: Constants.Packets.UPDATE_GAME_DATA,
 		data: {
 			id: 4,
 			time: lobbyData.settings[2],
 			data: {
-				id: drawerId,
+				id: drawer.id,
 				word: lobbyData.internal.currentWord
 			}
 		}
 	});
 }
 
-function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
+function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 	const lobbyId = "a"; // crypto.randomBytes(8).toString("base64url");
 
 	const lobbyData = {
@@ -519,10 +533,10 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 		},
 		settings: [
 			lang,
-			12,
-			80,
-			3,
-			3,
+			options.maxPlayerCount ?? 12,
+			options.defaultSettings.maxDrawTime ?? 80,
+			options.defaultSettings.totalRounds ?? 3,
+			options.defaultSettings.wordCount ?? 3,
 			2,
 			0,
 			0
@@ -553,8 +567,13 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 
 		switch(lobbyData.state.id) {
 			case Constants.GameState.CURRENT_ROUND: {
-				// @ts-expect-error
-				const drawerId = lobbyData.users[lobbyData.users.length - 1].id;
+				if(lobbyData.users.length === 1) {
+					lobbyData.state.id = 6;
+					lobbyData.state.time = 0;
+					return;
+				}
+
+				const drawerId = getNextDrawer(lobbyData.users, options.reverseDrawOrder)?.id;
 
 				lobbyData.state.id = 3;
 				lobbyData.state.time = 15;
@@ -589,7 +608,7 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 			}
 
 			case Constants.GameState.USER_PICKING_WORD: {
-				startGame(lobbyData, io);
+				startGame(options, lobbyData, io);
 				break;
 			}
 
@@ -617,16 +636,52 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 					user.guessed = false;
 				}
 
-				lobbyData.state.data.drawCommands = [];
-				lobbyData.state.data.word = [];
-				lobbyData.state.data.hints = [];
-				
 				lobbyData.internal.everyoneGuessed = false;
 				lobbyData.internal.drawerLeft = false;
 				lobbyData.internal.playersGuessed = 0;
 
+				lobbyData.state.data.drawCommands = [];
+				lobbyData.state.data.word = [];
+				lobbyData.state.data.hints = [];
+
 				lobbyData.state.time = 3;
-				if(lobbyData.users.length === 1) {
+
+				if(!getNextDrawer(lobbyData.users)) {
+					if(lobbyData.round + 1 >= lobbyData.settings[3]) {
+						lobbyData.state.id = Constants.GameState.GAME_RESULTS;
+						lobbyData.state.time = 5;
+
+						io.in(lobbyId).emit("data", {
+							id: Constants.Packets.UPDATE_GAME_DATA,
+							data: {
+								id: Constants.GameState.GAME_RESULTS,
+								time: lobbyData.state.time,
+								data: []
+							}
+						});
+					} else {
+						lobbyData.round++;
+
+						for(const user of lobbyData.users) {
+							// @ts-expect-error
+							user.hasDrawn = false;
+						}
+
+						setTimeout(() => {
+							io.in(lobbyId).emit("data", {
+								id: Constants.Packets.UPDATE_GAME_DATA,
+								data: {
+									id: Constants.GameState.CURRENT_ROUND,
+									time: 2,
+									data: lobbyData.round
+								}
+							});
+
+							lobbyData.state.id = Constants.GameState.CURRENT_ROUND;
+							lobbyData.state.time = 2;
+						}, 3000);
+					}
+				} else if(lobbyData.users.length === 1) {
 					lobbyData.state.id = lobbyData.type === Constants.LobbyType.PUBLIC ? Constants.GameState.WAITING_FOR_PLAYERS : Constants.GameState.IN_GAME_WAITING_ROOM;
 
 					setTimeout(() => {
@@ -638,19 +693,67 @@ function createLobby(type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 							}
 						});
 					}, 3000);
-				} else lobbyData.state.id = 5;
+				} else lobbyData.state.id = Constants.GameState.DRAW_RESULTS;
 				break;
 			}
 
 			case Constants.GameState.DRAW_RESULTS: {
-				lobbyData.state.id = 2;
+				lobbyData.state.id = Constants.GameState.CURRENT_ROUND;
 				lobbyData.state.time = 0;
 				break;
+			}
+
+			case Constants.GameState.GAME_RESULTS: {
+				lobbyData.round = 0;
+
+				if(lobbyData.type === Constants.LobbyType.PUBLIC) {
+					lobbyData.state.id = Constants.GameState.CURRENT_ROUND;
+					lobbyData.state.time = 2;
+
+					io.in(lobbyId).emit("data", {
+						id: Constants.Packets.UPDATE_GAME_DATA,
+						data: {
+							id: lobbyData.state.id,
+							time: lobbyData.state.time,
+							data: 0
+						}
+					});
+				} else {
+					lobbyData.state.id = Constants.GameState.IN_GAME_WAITING_ROOM;
+					lobbyData.state.time = 0;
+
+					io.in(lobbyId).emit("data", {
+						id: Constants.Packets.UPDATE_GAME_DATA,
+						data: {
+							id: lobbyData.state.id,
+							time: lobbyData.state.time,
+							data: 0
+						}
+					});
+				}
 			}
 		}
 	}, 1000);
 
 	return lobbyId;
+}
+
+function getNextDrawer(users, reverse = false) {
+	let user;
+
+	if(reverse) {
+		for(let i = (users.length - 1); i >= 0; i--) {
+			if(users[i].hasDrawn) continue;
+
+			user = users[i];
+			break;
+		}
+
+	} else {
+		user = users.find(usr => !usr.hasDrawn);
+	}
+
+	return user;
 }
 
 module.exports = {

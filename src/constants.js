@@ -70,6 +70,12 @@ const DrawResultsReason = {
     "DRAWER_LEFT": 2
 };
 
+const WordMode = {
+    "NORMAL": 0,
+    "HIDDEN": 1,
+    "COMBINATION": 2
+};
+
 module.exports = {
     Packets,
     LobbyType,
@@ -77,5 +83,6 @@ module.exports = {
     JoinError,
     GameState,
     GameStartError,
-    DrawResultsReason
+    DrawResultsReason,
+    WordMode
 };
