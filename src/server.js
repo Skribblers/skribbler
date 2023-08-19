@@ -138,6 +138,7 @@ class Server extends events {
 					flags: 0,
 					// === Internal Usage ===
 					votekicks: 0,
+					didVoteKick: false,
 					didVote: false,
 					hasDrawn: false
 				};
@@ -163,7 +164,7 @@ class Server extends events {
 					lobbyData.state.id = 2;
 					lobbyData.state.time = 2;
 
-					io.in(lobbyId).emit("data", {
+					io.to(lobbyId).emit("data", {
 						id: Constants.Packets.UPDATE_GAME_DATA,
 						data: {
 							id: Constants.GameState.CURRENT_ROUND,
@@ -196,7 +197,7 @@ class Server extends events {
 
 						const LeaveReason = id === Constants.Packets.HOST_BAN ? Constants.LeaveReason.BANNED : Constants.LeaveReason.KICKED;
 
-						io.in(lobbyId).emit("data", {
+						io.to(lobbyId).emit("data", {
 							id: Constants.Packets.PLAYER_LEAVE,
 							data: {
 								id: data,
@@ -204,12 +205,57 @@ class Server extends events {
 							}
 						});
 
-						io.in(data).emit("reason", LeaveReason);
-						io.in(data).disconnectSockets(true);
+						io.to(data).emit("reason", LeaveReason);
+						io.to(data).disconnectSockets(true);
 
 						if(id === Constants.Packets.HOST_BAN) {
 							lobbyData.internal.blockedIps.push(lobbyData.internal.ipMap[data]);
 						}
+						break;
+					}
+
+					case Constants.Packets.VOTEKICK: {
+						if(
+							(typeof data !== "string")
+						) break;
+
+						const player = lobbyData.users.find(usr => usr.id === socket.id);
+						if(player.didVoteKick) break;
+
+						const votedPlayer = lobbyData.users.find(usr => usr.id === data);
+						if(!votedPlayer) break;
+
+						votedPlayer.votekicks++;
+						const minVotesBeforeKick = Math.ceil((lobbyData.users.length / 2) + 1);
+
+						// Send packet to every user except the person getting vote kicked
+						for(const user of lobbyData.users) {
+							if(user.id === votedPlayer.id) continue;
+
+							io.to(user.id).emit("data", {
+								id: Constants.Packets.VOTEKICK,
+								data: [
+									socket.id, // Voter's Player ID
+									votedPlayer.id, // Voted Player's ID
+									votedPlayer.votekicks, // Current amount of votes
+									minVotesBeforeKick, // Votes until player kicked
+								]
+							});
+						}
+
+						// Only continue if the player has enough votes to be kicked
+						if(minVotesBeforeKick > votedPlayer.votekicks) break;
+
+						io.to(lobbyId).emit("data", {
+							id: Constants.Packets.PLAYER_LEAVE,
+							data: {
+								id: data,
+								reason: Constants.LeaveReason.KICKED
+							}
+						});
+	
+						io.to(data).emit("reason", Constants.LeaveReason.KICKED);
+						io.to(data).disconnectSockets(true);
 						break;
 					}
 
@@ -226,7 +272,7 @@ class Server extends events {
 
 						player.didVote = true;
 
-						io.in(lobbyId).emit("data", {
+						io.to(lobbyId).emit("data", {
 							id: Constants.Packets.VOTE,
 							data: {
 								id: socket.id,
@@ -357,7 +403,7 @@ class Server extends events {
 							break;
 						}
 
-						io.in(lobbyId).emit("data", {
+						io.to(lobbyId).emit("data", {
 							id: Constants.Packets.UPDATE_GAME_DATA,
 							data: {
 								id: Constants.GameState.CURRENT_ROUND,
@@ -409,7 +455,7 @@ class Server extends events {
 							break;
 						}
 
-						io.in(lobbyId).emit("data", {
+						io.to(lobbyId).emit("data", {
 							id: Constants.Packets.TEXT,
 							data: {
 								id: socket.id,
@@ -429,7 +475,10 @@ class Server extends events {
 
 				lobbyData.users.splice(index, 1);
 
-				if(lobbyData.users.length === 0) return lobbies[lobbyData.settings[0]][lobbyData.id] = undefined;
+				if(lobbyData.users.length === 0) {
+					delete lobbies[lobbyData.settings[0]][lobbyData.id];
+					return;
+				}
 
 				socket.to(lobbyId).emit("data", {
 					id: Constants.Packets.PLAYER_LEAVE,
@@ -459,6 +508,11 @@ class Server extends events {
 					lobbyData.state.id = 2;
 					lobbyData.state.time = 0;
 				}
+
+				if(lobbyData.users.length === 1) {
+					lobbyData.state.id = 2;
+					lobbyData.state.time = 0;
+				}
 			});
 		});
 
@@ -470,17 +524,6 @@ class Server extends events {
 	}
 }
 
-function getRandomWords(count = 1, useOnlyAdditionalWords = false, additionalWords = []) {
-	const words = [];
-	const possibleWords = (useOnlyAdditionalWords && additionalWords.length > 10) ? additionalWords : dictionary.concat(additionalWords);
-
-	for(let i = 0; i < count; i++) {
-		words.push(possibleWords[Math.floor(Math.random() * possibleWords.length)]);
-	}
-
-	return words;
-}
-
 function startGame(options, lobbyData, io, selectedWord = 0) {
 	const drawer = getNextDrawer(lobbyData.users, options.reverseDrawOrder);
 	drawer.hasDrawn = true;
@@ -490,19 +533,30 @@ function startGame(options, lobbyData, io, selectedWord = 0) {
 	lobbyData.state.time = lobbyData.settings[2];
 	lobbyData.state.data.word = lobbyData.settings[6] === Constants.WordMode.HIDDEN ? [] : [lobbyData.internal.currentWord.length];
 
-	io.to(lobbyData.id).emit("data", {
-		id: Constants.Packets.UPDATE_GAME_DATA,
-		data: {
-			id: 4,
-			time: lobbyData.settings[2],
-			data: {
-				id: drawer.id,
-				word: [lobbyData.internal.currentWord.length],
-				hints: [],
-				drawCommands: []
-			}
+	for(const user of lobbyData.users) {
+		for(const user of lobbyData.users) {
+			user.votekicks = 0;
+			user.didVoteKick = false;
+			user.didVote = false;
 		}
-	});
+
+		// Send packet to all players except drawer
+		if(user.id === drawer.id) continue;
+
+		io.to(user.id).emit("data", {
+			id: Constants.Packets.UPDATE_GAME_DATA,
+			data: {
+				id: 4,
+				time: lobbyData.settings[2],
+				data: {
+					id: drawer.id,
+					word: [lobbyData.internal.currentWord.length],
+					hints: [],
+					drawCommands: []
+				}
+			}
+		});
+	}
 
 	io.to(drawer.id).emit("data", {
 		id: Constants.Packets.UPDATE_GAME_DATA,
@@ -567,9 +621,29 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 
 		switch(lobbyData.state.id) {
 			case Constants.GameState.CURRENT_ROUND: {
+				for(const user of lobbyData.users) {
+					// @ts-expect-error
+					user.votekicks = 0;
+					// @ts-expect-error
+					user.didVoteKick = false;
+					// @ts-expect-error
+					user.didVote = false;
+					// @ts-expect-error
+					user.hasDrawn = false;
+				}
+
 				if(lobbyData.users.length === 1) {
-					lobbyData.state.id = 6;
+					lobbyData.state.id = lobbyData.type === Constants.LobbyType.PUBLIC ? 0 : 7;
 					lobbyData.state.time = 0;
+
+					io.to(lobbyData.id).emit("data", {
+						id: Constants.Packets.UPDATE_GAME_DATA,
+						data: {
+							id: lobbyData.state.id,
+							time: 0,
+							data: 0
+						}
+					});
 					return;
 				}
 
@@ -579,16 +653,23 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 				lobbyData.state.time = 15;
 				lobbyData.state.data.id = drawerId;
 
-				io.in(lobbyId).emit("data", {
-					id: Constants.Packets.UPDATE_GAME_DATA,
-					data: {
-						id: 3,
-						time: lobbyData.state.time,
+				// Send packet to all players except drawer
+				for(const user of lobbyData.users) {
+					// @ts-expect-error
+					if(user.id === drawerId) continue;
+
+					// @ts-expect-error
+					io.to(user.id).emit("data", {
+						id: Constants.Packets.UPDATE_GAME_DATA,
 						data: {
-							id: drawerId
+							id: 3,
+							time: lobbyData.state.time,
+							data: {
+								id: drawerId
+							}
 						}
-					}
-				});
+					});
+				}
 
 				// @ts-expect-error
 				lobbyData.internal.possibleWords = getRandomWords(lobbyData.settings[4], lobbyData.settings[7], lobbyData.internal.customWords);
@@ -618,7 +699,7 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 					else if(lobbyData.internal.everyoneGuessed) endReason = Constants.DrawResultsReason.EVERYONE_GUESSED;
 					else endReason = Constants.DrawResultsReason.TIME_IS_UP;
 
-				io.in(lobbyId).emit("data", {
+				io.to(lobbyId).emit("data", {
 					id: Constants.Packets.UPDATE_GAME_DATA,
 					data: {
 						id: 5,
@@ -651,7 +732,7 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 						lobbyData.state.id = Constants.GameState.GAME_RESULTS;
 						lobbyData.state.time = 5;
 
-						io.in(lobbyId).emit("data", {
+						io.to(lobbyId).emit("data", {
 							id: Constants.Packets.UPDATE_GAME_DATA,
 							data: {
 								id: Constants.GameState.GAME_RESULTS,
@@ -662,13 +743,8 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 					} else {
 						lobbyData.round++;
 
-						for(const user of lobbyData.users) {
-							// @ts-expect-error
-							user.hasDrawn = false;
-						}
-
 						setTimeout(() => {
-							io.in(lobbyId).emit("data", {
+							io.to(lobbyId).emit("data", {
 								id: Constants.Packets.UPDATE_GAME_DATA,
 								data: {
 									id: Constants.GameState.CURRENT_ROUND,
@@ -681,18 +757,6 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 							lobbyData.state.time = 2;
 						}, 3000);
 					}
-				} else if(lobbyData.users.length === 1) {
-					lobbyData.state.id = lobbyData.type === Constants.LobbyType.PUBLIC ? Constants.GameState.WAITING_FOR_PLAYERS : Constants.GameState.IN_GAME_WAITING_ROOM;
-
-					setTimeout(() => {
-						io.in(lobbyId).emit("data", {
-							id: Constants.Packets.UPDATE_GAME_DATA,
-							data: {
-								id: lobbyData.state.id,
-								time: 0
-							}
-						});
-					}, 3000);
 				} else lobbyData.state.id = Constants.GameState.DRAW_RESULTS;
 				break;
 			}
@@ -710,7 +774,7 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 					lobbyData.state.id = Constants.GameState.CURRENT_ROUND;
 					lobbyData.state.time = 2;
 
-					io.in(lobbyId).emit("data", {
+					io.to(lobbyId).emit("data", {
 						id: Constants.Packets.UPDATE_GAME_DATA,
 						data: {
 							id: lobbyData.state.id,
@@ -722,7 +786,7 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 					lobbyData.state.id = Constants.GameState.IN_GAME_WAITING_ROOM;
 					lobbyData.state.time = 0;
 
-					io.in(lobbyId).emit("data", {
+					io.to(lobbyId).emit("data", {
 						id: Constants.Packets.UPDATE_GAME_DATA,
 						data: {
 							id: lobbyData.state.id,
@@ -736,6 +800,17 @@ function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
 	}, 1000);
 
 	return lobbyId;
+}
+
+function getRandomWords(count = 1, useOnlyAdditionalWords = false, additionalWords = []) {
+	const words = [];
+	const possibleWords = (useOnlyAdditionalWords && additionalWords.length > 10) ? additionalWords : dictionary.concat(additionalWords);
+
+	for(let i = 0; i < count; i++) {
+		words.push(possibleWords[Math.floor(Math.random() * possibleWords.length)]);
+	}
+
+	return words;
 }
 
 function getNextDrawer(users, reverse = false) {
