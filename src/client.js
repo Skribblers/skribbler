@@ -508,10 +508,10 @@ class Client extends events {
 	 * @async
 	 * @throws
 	 */
-	async startGame(customWords) {
-		if(typeof customWords !== "undefined" && !Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
+	async startGame(customWords = []) {
+		if(!Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
 
-		this.sendPacket(22, customWords ? customWords.join(", ") : "");
+		this.sendPacket(22, customWords.join(", "));
 
 		return new Promise((resolve) => {
 			let resolved;
@@ -521,7 +521,7 @@ class Client extends events {
 			});
 
 			// If we havent recieved a startError event after 2.5 seconds, most likely it succeeded
-			setInterval(() => {
+			setTimeout(() => {
 				if(!resolved) resolve("OK");
 			}, 2500);
 		});

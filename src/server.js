@@ -284,22 +284,36 @@ class Server extends events {
 
 					case Constants.Packets.UPDATE_SETTINGS: {
 						if(
+							// For some odd reason the skribbl.io client sends this values as Strings instead of a Numver
 							typeof data?.id !== "string" ||
-							typeof data?.val !== "string" ||
-							socket.id !== lobbyData.owner,
-							lobbyData.state.id !== 7 ||
-							data.id < 0 || data.id > lobbyData.settings.length
+							(typeof data?.val !== "string" && typeof data?.val !== "number") ||
+							socket.id !== lobbyData.owner ||
+							lobbyData.state.id !== Constants.GameState.IN_GAME_WAITING_ROOM ||
+							// Check if the setting exists
+							data.id < 0 ||
+							data.id > 7 ||
+							// Make sure setting value isn't out of bounds
+							data.val < Constants.SettingsMinValue[data.id] ||
+							data.val > Constants.SettingsMaxValue[data.id]
+						) break;
+
+						const id = Number(data.id);
+						const val = Number(data.val);
+
+						if(
+							isNaN(id) ||
+							isNaN(val)
 						) break;
 
 						socket.to(lobbyId).emit("data", {
 							id: Constants.Packets.UPDATE_SETTINGS,
 							data: {
-								id: Number(data.id),
-								val: Number(data.val)
+								id,
+								val
 							}
 						});
 
-						lobbyData.settings[Number(data.id)] = Number(data.val);
+						lobbyData.settings[id] = val
 						break;
 					}
 
@@ -309,7 +323,7 @@ class Server extends events {
 							data < 0 ||
 							data > lobbyData.settings[4] ||
 							socket.id !== lobbyData.state.data.id ||
-							lobbyData.state.id !== 3
+							lobbyData.state.id !== Constants.GameState.USER_PICKING_WORD
 						) break;
 
 						startGame(this.options, lobbyData, io, data);
@@ -390,7 +404,7 @@ class Server extends events {
 						if(
 							typeof data !== "string" ||
 							socket.id !== lobbyData.owner ||
-							lobbyData.state.id !== 7
+							lobbyData.state.id !== Constants.GameState.IN_GAME_WAITING_ROOM
 						) break;
 
 						if(lobbyData.users.length < 2) {
@@ -425,11 +439,12 @@ class Server extends events {
 
 						if(
 							lobbyData.internal.currentWord === data &&
-							lobbyData.state.id === 4 &&
+							lobbyData.state.id === Constants.GameState.CAN_DRAW &&
 							lobbyData.state.data.id !== userId &&
 							!player.guessed
 						) {
 							player.guessed = true;
+
 							socket.to(lobbyId).emit("data", {
 								id: Constants.Packets.PLAYER_GUESSED,
 								data: {
@@ -447,7 +462,7 @@ class Server extends events {
 
 							lobbyData.internal.playersGuessed++;
 
-							// -1 to account for the current person drawing
+							// +1 to account for the current person drawing
 							if(lobbyData.internal.playersGuessed + 1 >= lobbyData.users.length) {
 								lobbyData.internal.everyoneGuessed = true;
 								lobbyData.state.time = 0;
@@ -572,7 +587,7 @@ function startGame(options, lobbyData, io, selectedWord = 0) {
 }
 
 function createLobby(options, type = Constants.LobbyType.PUBLIC, lang = 0, io) {
-	const lobbyId = "a"; // crypto.randomBytes(8).toString("base64url");
+	const lobbyId = crypto.randomBytes(8).toString("base64url");
 
 	const lobbyData = {
 		internal: {

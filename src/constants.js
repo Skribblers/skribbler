@@ -76,6 +76,39 @@ const WordMode = {
     "COMBINATION": 2
 };
 
+const Settings = {
+    "LANGUAGE": 0,
+    "MAX_PLAYER_COUNT": 1,
+    "MAX_DRAW_TIME": 2,
+    "MAX_ROUNDS": 3,
+    "WORD_COUNT": 4,
+    "MAX_HINTS": 5,
+    "WORD_MODE": 6,
+    "USE_CUSTOM_WORDS_ONLY": 7
+};
+
+const SettingsMinValue = {
+    0: 0,
+    1: 2,
+    2: 15,
+    3: 2,
+    4: 1,
+    5: 0,
+    6: 0,
+    7: 0
+};
+
+const SettingsMaxValue = {
+    0: 27,
+    1: 20,
+    2: 240,
+    3: 10,
+    4: 5,
+    5: 5,
+    6: 2,
+    7: 1
+};
+
 module.exports = {
     Packets,
     LobbyType,
@@ -84,5 +117,8 @@ module.exports = {
     GameState,
     GameStartError,
     DrawResultsReason,
-    WordMode
+    WordMode,
+    Settings,
+    SettingsMinValue,
+    SettingsMaxValue
 };
