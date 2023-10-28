@@ -12,10 +12,10 @@ const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
 async function getServerUri(options = {}) {
+	if(options.serverURL) return options.serverURL;
+
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
-
-	if(options.serverURL) return options.serverURL;
 
 	// @ts-expect-error
 	const request = await fetch("https://skribbl.io:3000/play", {
