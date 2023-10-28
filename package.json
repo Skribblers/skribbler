@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/Skribblers/skribbler#readme",
   "dependencies": {
-    "an-array-of-english-words": "^2.0.0",
     "express": "^4.18.2",
     "node-fetch": "^2.6.12",
     "socket.io": "^4.7.2",
