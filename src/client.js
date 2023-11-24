@@ -51,6 +51,9 @@ class Client extends events {
 
 	userId = null;
 	ownerId = null;
+	
+	lobbyType = null;
+	
 	players = [];
 	time = 0;
 	currentDrawer = null;
@@ -153,6 +156,8 @@ class Client extends events {
 
 					this.userId = data.me;
 					this.ownerId = data.owner;
+
+					this.lobbyType = data.type;
 
 					this.players = data.users;
 
