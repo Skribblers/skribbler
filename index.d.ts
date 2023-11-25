@@ -53,6 +53,9 @@ declare module "skribbler" {
 
 		userId?: Number
 		ownerId?: Number
+
+		lobbyType?: Number
+
 		players: Array<PlayerObject>
 		time: Number
 		currentDrawer?: PlayerObject
