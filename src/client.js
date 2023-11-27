@@ -79,12 +79,13 @@ class Client extends events {
 			disconnectReason = data;
 		});
 
-		socket.on("disconnect", () => {
+		socket.on("disconnect", (transportDisconnectReason) => {
 			this.connected = false;
 
 			this.emit("disconnect", {
 				reason: disconnectReason,
-				joinErr
+				joinErr,
+				transportDisconnectReason
 			});
 		});
 
