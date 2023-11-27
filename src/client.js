@@ -71,7 +71,7 @@ class Client extends events {
 
 		let disconnectReason;
 		let joinErr;
-		let clientReason;		
+		let wsReason;		
 
 		socket.on("joinerr", (data) => {
 			joinErr = data;
@@ -82,14 +82,14 @@ class Client extends events {
 		});
 
 		socket.on("disconnect", (data) => {
-			clientReason = data;
+			wsReason = data;
 
 			this.connected = false;
 
 			this.emit("disconnect", {
 				reason: disconnectReason,
 				joinErr,
-				clientReason
+				wsReason
 			});
 		});
 
