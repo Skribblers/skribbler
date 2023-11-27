@@ -73,6 +73,7 @@ async function joinLobby(options = {}) {
 			...options.httpHeaders,
 		},
 		reconnection: false,
+		transports: ["websocket", "polling"],
 
 		...options.socketOptions
 	});
