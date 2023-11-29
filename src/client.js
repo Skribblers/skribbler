@@ -90,7 +90,10 @@ class Client extends events {
 		});
 
 		// Start listening for packets
-		socket.on("data", ({id, data}) => {
+		socket.on("data", (message) => {
+			if(message === null) return;
+
+			const { id, data } = message;
 			if(data === null) return;
 
 			switch(id) {
@@ -119,7 +122,31 @@ class Client extends events {
 
 					break;
 				}
+				case Constants.Packets.VOTEKICK: {
+					if(
+						!Array.isArray(data) ||
+						typeof data[0] !== "number" ||
+						typeof data[1] !== "number" ||
+						typeof data[2] !== "number" ||
+						typeof data[3] !== "number"
+					) return console.log(`Received invalid packet. ID: 2.`);
+
+					// Get the player that voted to kick, and who they voted for
+					const voter = this.players.find(plr => plr.id === data[0]);
+					const votee = this.players.find(plr => plr.id === data[1]);
+					if(!voter) break;
+					if(!votee) break;
+
+					this.emit("votekick", {
+						voter,
+						votee,
+						currentVotes: data[2],
+						requiredVotes: data[3]
+					});
+					break;
+				}
 				case Constants.Packets.VOTE: {
+					console.log(data);
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.vote !== "number"

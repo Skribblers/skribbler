@@ -5,7 +5,7 @@ import * as events from "events";
 
 declare module "skribbler" {
 	export type Vote = "like" | "dislike"
-	export type ClientEvents = "connect" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "roundStart" | "chooseWord" | "canDraw" | "undo" | "vote" | Number
+	export type ClientEvents = "connect" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "roundStart" | "chooseWord" | "canDraw" | "undo" | "vote" | "votekick" | Number
 
 	export interface ClientOptions {
 		name?: String
