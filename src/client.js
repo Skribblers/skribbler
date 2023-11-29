@@ -146,7 +146,6 @@ class Client extends events {
 					break;
 				}
 				case Constants.Packets.VOTE: {
-					console.log(data);
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.vote !== "number"
