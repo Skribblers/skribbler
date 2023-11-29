@@ -91,7 +91,8 @@ class Client extends events {
 
 		// Start listening for packets
 		socket.on("data", (message) => {
-			if(message === null) return;
+			// Make sure 'id' and 'data' exist on the data event to prevent a crash from trying to destructure an invalid type
+			if(!message?.id || !message?.data) return;
 
 			const { id, data } = message;
 			if(data === null) return;
