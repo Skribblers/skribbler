@@ -213,7 +213,7 @@ class Client extends events {
 							this.round = data.data + 1;
 
 							// Scores are reset
-							if(this.round === 0) {
+							if(this.round === 1) {
 								for(const player of this.players) {
 									player.score = 0;
 								}
