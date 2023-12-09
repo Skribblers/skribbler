@@ -51,9 +51,9 @@ class Client extends events {
 
 	userId = null;
 	ownerId = null;
-	
+
 	lobbyType = null;
-	
+
 	players = [];
 	time = 0;
 	currentDrawer = null;
@@ -91,8 +91,8 @@ class Client extends events {
 
 		// Start listening for packets
 		socket.on("data", (message) => {
-			// Make sure 'id' and 'data' exist on the data event to prevent a crash from trying to destructure an invalid type
-			if(!message?.id || !message?.data) return;
+			// Make sure 'id' exist on the data event to prevent a crash from trying to destructure an invalid type
+			if(!message?.id) return;
 
 			const { id, data } = message;
 			if(data === null) return;
@@ -180,7 +180,7 @@ class Client extends events {
 					};
 
 					this.state = data.state?.id;
-					this.round = data.round;
+					this.round = data.round + 1;
 
 					this.userId = data.me;
 					this.ownerId = data.owner;
@@ -192,6 +192,7 @@ class Client extends events {
 					this.time = data.state?.time;
 					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id);
 					this.canvas = this.canvas.concat(data.state?.data?.drawCommands);
+					this.word = "";
 
 					this.emit("connect");
 					break;
@@ -206,6 +207,15 @@ class Client extends events {
 
 					// Handle game state
 					switch(data.id) {
+						// Pass through
+						case Constants.GameState.GAME_STARTING_SOON:
+						case Constants.GameState.WAITING_FOR_PLAYERS: {
+							this.emit("stateUpdate", {
+								state: data.id
+							});
+							break;
+						}
+
 						case Constants.GameState.CURRENT_ROUND: {
 							if(typeof data.data !== "number") return console.log(`Received invalid packet. ID: 11`);
 
@@ -219,20 +229,25 @@ class Client extends events {
 								}
 							}
 
-							this.emit("roundStart", this.round);
+							this.emit("stateUpdate", {
+								state: data.id,
+								round: this.round
+							});
 							break;
 						}
 
 						case Constants.GameState.USER_PICKING_WORD: {
 							if(typeof data.data?.id !== "number") return console.log(`Received invalid packet. ID: 11`);
+
 							this.currentDrawer = this.players.find(plr => plr.id === data.data.id);
-
-							// Only handle rest of the code if the user can select a word to draw
-							if(!Array.isArray(data.data?.words)) break;
-
 							this.availableWords = data.data.words;
 
-							this.emit("chooseWord", this.availableWords);
+							this.emit("stateUpdate", {
+								state: data.id,
+								drawer: this.currentDrawer,
+								// The following field will be undefined if the Client is not the one who will be drawing
+								words: this.availableWords
+							});
 							break;
 						}
 
@@ -243,20 +258,48 @@ class Client extends events {
 							this.availableWords = [];
 							this.currentDrawer = this.players.find(plr => plr.id === data.data?.id);
 
-							if(data.data?.id === this.userId) this.emit("canDraw");
+							if(Array.isArray(data.data.word)) {
+								for(const length of data.data.word) {
+									this.word += ` ${"_".repeat(length)}`;
+								}
+							} else {
+								this.word = data.data.word;
+							}
+
+							this.emit("stateUpdate", {
+								state: data.id,
+								drawer: this.currentDrawer,
+								word: this.word
+							});
 							break;
 						}
 
 						case Constants.GameState.DRAW_RESULTS: {
 							if(!Array.isArray(data.data?.scores)) return console.log(`Received invalid packet. ID: 11`);
 
+							this.word = "";
+
+							const drawResult = {
+								reason: data.data.reason,
+								word: data.data.word,
+								newScores: {}
+							};
+
 							let counter = 0;
 							for(const player of this.players) {
 								player.guessed = false;
 								player.score = data.data.scores[(counter * 3) + 1];
 
+								drawResult.newScores[player.name] = player.score;
+
 								counter++;
 							}
+
+							this.emit("stateUpdate", {
+								state: data.id,
+
+								...drawResult
+							});
 							break;
 						}
 
@@ -268,6 +311,10 @@ class Client extends events {
 							for(const player of this.players) {
 								player.score = 0;
 							}
+
+							this.emit("stateUpdate", {
+								state: data.id
+							});
 						}
 					}
 					break;
@@ -288,6 +335,16 @@ class Client extends events {
 				}
 				case Constants.Packets.REVEAL_HINT:
 					if(!Array.isArray(data)) return console.log(`Received invalid packet. ID: 13.`);
+
+					for(const hint of data) {
+						if(!Array.isArray(hint)) continue;
+
+						/*
+							hint[0] is the position of the word where the letter belongs
+							hint[1] is the letter
+						*/
+						this.word[hint[0]] = hint[1];
+					}
 
 					this.emit("hintRevealed", data);
 					break;
@@ -366,7 +423,11 @@ class Client extends events {
 				case Constants.Packets.GAME_START_ERROR: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 31.`);
 
-					this.emit("startError", data.id);
+					this.emit("startError", {
+						reason: data.id,
+						// The following field is only sent if the start error reason is 100
+						time: data.id
+					});
 					break;
 				}
 				default:
@@ -473,7 +534,7 @@ class Client extends events {
 
 	/**
 	 * @name selectWord
-	 * @description The word to select to draw. You can listen in on the chooseWord event, which provides an array of all the possible words. The exact word or the array index number are accepted
+	 * @description The word to select to draw. You can listen to the stateUpdate event and wait for a state id of 3. The event will provide an array of all the possible words. The exact word or the array index number are accepted
 	 * @param {Number | String} word - The word to select
 	 * @throws
 	 */
@@ -535,7 +596,7 @@ class Client extends events {
 
 	/**
 	 * @name startGame
-	 * @description Start the round if you are the owner of the private lobby
+	 * @description Start the game if you are the owner of the private lobby
 	 * @param {Array} [customWords] - Custom words to use. Note: If there are less then 10 custom words, the server does not use the custom word list
 	 * @returns {Promise<Number | String>} startError
 	 * @async
