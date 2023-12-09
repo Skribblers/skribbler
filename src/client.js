@@ -361,6 +361,8 @@ class Client extends events {
 
 					player.guessed = true;
 
+					if(data.word) this.word = data.word;
+
 					this.emit("playerGuessed", {
 						player,
 						// Can be undefined
