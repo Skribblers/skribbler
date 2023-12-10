@@ -59,6 +59,7 @@ class Client extends events {
 	currentDrawer = null;
 	availableWords = [];
 	canvas = [];
+	word = "";
 
 	async init() {
 		if(this.socket) throw Error("Client has already initialized.");
@@ -192,7 +193,22 @@ class Client extends events {
 					this.time = data.state?.time;
 					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id);
 					this.canvas = this.canvas.concat(data.state?.data?.drawCommands);
-					this.word = "";
+
+					if(Array.isArray(data.state?.data?.word)) {
+						for(const length of data.state.data.word) {
+							this.word += `${"_".repeat(length)} `.trim();
+						}
+					}
+
+					if(Array.isArray(data.state?.data?.hints)) {
+						for(const hint of data.state.data.hints) {
+							if(!Array.isArray(hint)) continue;
+
+							const characters = this.word.split("");
+							characters[hint[0]] = hint[1];
+							this.word = characters.join("");
+						}
+					}
 
 					this.emit("connect");
 					break;
@@ -260,7 +276,7 @@ class Client extends events {
 
 							if(Array.isArray(data.data.word)) {
 								for(const length of data.data.word) {
-									this.word += ` ${"_".repeat(length)}`;
+									this.word += `${"_".repeat(length)} `.trim();
 								}
 							} else {
 								this.word = data.data.word;
@@ -279,7 +295,8 @@ class Client extends events {
 
 							this.word = "";
 
-							const drawResult = {
+							const stateUpdate = {
+								state: data.id,
 								reason: data.data.reason,
 								word: data.data.word,
 								newScores: {}
@@ -290,15 +307,34 @@ class Client extends events {
 								player.guessed = false;
 								player.score = data.data.scores[(counter * 3) + 1];
 
-								drawResult.newScores[player.name] = player.score;
+								stateUpdate.newScores[player.name] = player.score;
 
 								counter++;
 							}
 
+							this.emit("stateUpdate", stateUpdate);
+							break;
+						}
+
+						case Constants.GameState.GAME_RESULTS: {
+							if(!Array.isArray(data.data)) return console.log(`Received invalid packet. ID: 11`);
+
+							const leaderboard = [];
+
+							for(const player of data.data) {
+								if(!Array.isArray(player)) break;
+
+								/**
+								 * player[0] = Player ID
+								 * player[1] = Leaderboard position
+								 * player[2] = Unknown
+								 */
+								leaderboard[player[1]] = this.players.find(plr => plr.id === player[0]);
+							}
+
 							this.emit("stateUpdate", {
 								state: data.id,
-
-								...drawResult
+								leaderboard
 							});
 							break;
 						}
@@ -339,11 +375,13 @@ class Client extends events {
 					for(const hint of data) {
 						if(!Array.isArray(hint)) continue;
 
-						/*
-							hint[0] is the position of the word where the letter belongs
-							hint[1] is the letter
-						*/
-						this.word[hint[0]] = hint[1];
+						/**
+						 * hint[0] is the position of the word where the letter belongs
+						 * hint[1] is the letter
+						 */
+						const characters = this.word.split("");
+						characters[hint[0]] = hint[1];
+						this.word = characters.join("");
 					}
 
 					this.emit("hintRevealed", data);
@@ -428,7 +466,7 @@ class Client extends events {
 					this.emit("startError", {
 						reason: data.id,
 						// The following field is only sent if the start error reason is 100
-						time: data.id
+						time: data.data
 					});
 					break;
 				}
