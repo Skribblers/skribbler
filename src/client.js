@@ -196,18 +196,22 @@ class Client extends events {
 
 					if(Array.isArray(data.state?.data?.word)) {
 						for(const length of data.state.data.word) {
-							this.word += `${"_".repeat(length)} `.trim();
+							this.word += `${"_".repeat(length)} `;
 						}
+
+						this.word = this.word.trim();
 					}
 
 					if(Array.isArray(data.state?.data?.hints)) {
+						const characters = this.word.split("");
+
 						for(const hint of data.state.data.hints) {
 							if(!Array.isArray(hint)) continue;
 
-							const characters = this.word.split("");
 							characters[hint[0]] = hint[1];
-							this.word = characters.join("");
 						}
+
+						this.word = characters.join("");
 					}
 
 					this.emit("connect");
@@ -276,8 +280,10 @@ class Client extends events {
 
 							if(Array.isArray(data.data.word)) {
 								for(const length of data.data.word) {
-									this.word += `${"_".repeat(length)} `.trim();
+									this.word += `${"_".repeat(length)} `;
 								}
+
+								this.word = this.word.trim();
 							} else {
 								this.word = data.data.word;
 							}
@@ -369,9 +375,10 @@ class Client extends events {
 					this.settings[setting] = data.val;
 					break;
 				}
-				case Constants.Packets.REVEAL_HINT:
+				case Constants.Packets.REVEAL_HINT: {
 					if(!Array.isArray(data)) return console.log(`Received invalid packet. ID: 13.`);
 
+					const characters = this.word.split("");
 					for(const hint of data) {
 						if(!Array.isArray(hint)) continue;
 
@@ -379,13 +386,14 @@ class Client extends events {
 						 * hint[0] is the position of the word where the letter belongs
 						 * hint[1] is the letter
 						 */
-						const characters = this.word.split("");
 						characters[hint[0]] = hint[1];
-						this.word = characters.join("");
 					}
+
+					this.word = characters.join("");
 
 					this.emit("hintRevealed", data);
 					break;
+				}
 				case Constants.Packets.UPDATE_TIME:
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 14.`);
 
