@@ -46,21 +46,32 @@ class Proxy extends events {
 			}
 		});
 
-		io.on("connection", async (socket) => {
-			let loginData;
-			socket.on("login", (data) => {
-				loginData = data;
+		io.on("connection", (socket) => {
+			let loggedIn = false;
+			socket.on("login", async (loginData) => {
+				// This is to make sure the login packet cannot be spammed in the same socket connection
+				if(loggedIn) return;
+				loggedIn = true;
+
+				// If the Proxy options does not contain any HTTP headers then we use the headers the client sends to our socket.io server
+				const options = {
+					httpHeaders: socket.handshake.headers,
+					lobbyCode: loginData.join,
+
+					...this.options
+				};
+
+				// Connect to server URI provided in Proxy options or the skribbl.io servers
+				const server = clientIo(await getServerUri(options));
+
+				server.on("connect", () => {
+					server.emit("login", loginData);
+				});
+
+				const player = new ProxyPlayer(socket, server);
+
+				this.emit("playerJoin", player);
 			});
-
-			const server = await clientIo(await getServerUri(this.options));
-
-			server.on("connect", () => {
-				server.emit("login", loginData);
-			});
-
-			const player = new ProxyPlayer(socket, server);
-
-			this.emit("playerJoin", player);
 		});
 
 		const port = this.options.port ?? 3000;
