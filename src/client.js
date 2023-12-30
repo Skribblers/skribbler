@@ -436,7 +436,7 @@ class Client extends events {
 					break;
 				}
 				case Constants.Packets.DRAW:
-					this.canvas = this.canvas.concat(data);
+					this.canvas.push(...data);
 
 					this.emit("draw", data);
 					break;
@@ -610,7 +610,7 @@ class Client extends events {
 	draw(data) {
 		if(!Array.isArray(data)) throw TypeError("Expected data to be an array");
 
-		this.canvas = this.canvas.concat(data);
+		this.canvas.push(...data);
 
 		this.sendPacket(19, data);
 	}
