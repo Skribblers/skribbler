@@ -18,10 +18,10 @@ async function getServerUri(options = {}) {
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
 	// @ts-expect-error
-	const request = await fetch("https://skribbl.io:3000/play", {
+	const request = await fetch("https://skribbl.io/api/play", {
 		method: "POST",
 		headers: {
-			"Host": "skribbl.io:3000",
+			"Host": "skribbl.io",
 			"User-Agent": userAgent,
 			"Accept": "*/*",
 			"Accept-Language": "en-US",
