@@ -2,7 +2,7 @@
 const fetch = require("node-fetch");
 const { io } = require("socket.io-client");
 
-const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
+const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 /**
  * @param {Object} [options] - Options the client should use
@@ -18,10 +18,10 @@ async function getServerUri(options = {}) {
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
 	// @ts-expect-error
-	const request = await fetch("https://skribbl.io:3000/play", {
+	const request = await fetch("https://skribbl.io/api/play", {
 		method: "POST",
 		headers: {
-			"Host": "skribbl.io:3000",
+			"Host": "skribbl.io",
 			"User-Agent": userAgent,
 			"Accept": "*/*",
 			"Accept-Language": "en-US",
