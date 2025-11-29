@@ -120,6 +120,48 @@ declare module "skribbler" {
 		LIKE
 	}
 
+	export enum Tools {
+		PENCIL = 0,
+		FILL
+	}
+
+	export enum BrushSize {
+		EXTRA_SMALL = 4,
+		SMALL = 10,
+		MEDIUM = 20,
+		LARGE = 32,
+		EXTRA_LARGE = 40
+	}
+
+	export enum Colors {
+		WHITE = 0,
+		BLACK,
+		GRAY,
+		DARK_GRAY,
+		RED,
+		DARK_RED,
+		ORANGE,
+		DARK_ORANGE,
+		YELLOW,
+		DARK_YELLOW,
+		LIME,
+		DARK_GREEN,
+		MINT,
+		DARK_MINT,
+		CYAN,
+		DARK_CYAN,
+		BLUE,
+		DARK_BLUE,
+		MAGENTA,
+		DARK_MAGENTA,
+		PINK,
+		DARK_PINK,
+		PEACH,
+		DARK_PEACH,
+		BROWN,
+		DARK_BROWN
+	}
+
 	export type ClientEvents = "connect" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "undo" | "vote" | "votekick" | "startError" | "stateUpdate" | Number
 
 	export interface ClientOptions {
@@ -222,7 +264,7 @@ declare module "skribbler" {
 		drawCommands: Array<Array<Number>>
 		readonly canDraw: Boolean
 
-		draw(data: Array<Array<Number>>): void
+		draw(data: DrawBuilder | Array<Array<Number>>): void
 		clear(): void
 		undo(id?: Number): void
 	}
@@ -238,7 +280,7 @@ declare module "skribbler" {
 	}
 
 	export class Proxy extends events {
-		constructor(options?: ClientOptions)
+		constructor(options?: ProxyOptions)
 
 		options: ProxyOptions
 
@@ -270,5 +312,14 @@ declare module "skribbler" {
 		cheating: Boolean
 
 		toValue(): Number
+	}
+
+	export class DrawBuilder {
+		drawCommands: Array<Array<Number>>
+
+		draw(color: Colors, brushSize: BrushSize, startX: Number, startY: Number, endX: Number, endY: Number): DrawBuilder
+		fill(color: Colors, startX: Number, startY: Number): DrawBuilder
+
+		toValue(): Array<Array<Number>>
 	}
 }

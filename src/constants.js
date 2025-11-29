@@ -157,6 +157,48 @@ const ReportReasons = {
     "CHEATING": 4
 };
 
+const Tools = {
+    "PENCIL": 0,
+    "FILL": 1
+};
+
+const BrushSize = {
+    "EXTRA_SMALL": 4,
+    "SMALL": 10,
+    "MEDIUM": 20,
+    "LARGE": 32,
+    "EXTRA_LARGE": 40
+};
+
+const Colors = {
+    "WHITE": 0,
+    "BLACK": 1,
+    "GRAY": 2,
+    "DARK_GRAY": 3,
+    "RED": 4,
+    "DARK_RED": 5,
+    "ORANGE": 6,
+    "DARK_ORANGE": 7,
+    "YELLOW": 8,
+    "DARK_YELLOW": 9,
+    "LIME": 10,
+    "DARK_GREEN": 11,
+    "MINT": 12,
+    "DARK_MINT": 13,
+    "CYAN": 14,
+    "DARK_CYAN": 15,
+    "BLUE": 16,
+    "DARK_BLUE": 17,
+    "MAGENTA": 18,
+    "DARK_MAGENTA": 19,
+    "PINK": 20,
+    "DARK_PINK": 21,
+    "PEACH": 22,
+    "DARK_PEACH": 23,
+    "BROWN": 24,
+    "DARK_BROWN": 25
+};
+
 module.exports = {
     Packets,
     Language,
@@ -172,5 +214,8 @@ module.exports = {
     SettingsMaxValue,
     UserFlags,
     Vote,
-    ReportReasons
+    ReportReasons,
+    Tools,
+    BrushSize,
+    Colors,
 };

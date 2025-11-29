@@ -1,5 +1,6 @@
 // @ts-check
 const { Packets } = require("../constants.js");
+const { DrawBuilder } = require("../builders/DrawBuilder.js");
 
 class Canvas {
     client;
@@ -23,16 +24,18 @@ class Canvas {
 	/**
 	 * @name draw
 	 * @description Draw on the canvas
-	 * @param {Array<Array<Number>>} data - Draw commands to send. If the array has more then 8 items, the server simply ignores the packet
+	 * @param {DrawBuilder | Array<Array<Number>>} data - Draw commands to send. If the array has more then 8 items, the server simply ignores the packet
 	 * @throws
 	 */
 	draw(data) {
-		if(!Array.isArray(data)) throw TypeError("Expected data to be an array");
+		if(!(data instanceof DrawBuilder) && !Array.isArray(data)) throw TypeError("Expected data to either be an array or an instance of DrawBuilder");
         if(!this.canDraw) throw Error("Canvas#draw can only be called by the player who's drawing");
 
-		this.drawCommands.push(...data);
+		const drawCmds = data instanceof DrawBuilder ? data.toValue() : data;
 
-		this.client.sendPacket(Packets.DRAW, data);
+		this.drawCommands.push(...drawCmds);
+
+		this.client.sendPacket(Packets.DRAW, drawCmds);
 	}
 
 	/**

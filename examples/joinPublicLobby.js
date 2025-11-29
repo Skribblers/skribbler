@@ -1,5 +1,5 @@
 // @ts-check
-const { Client, GameState } = require("skribbler");
+const { Client, DrawBuilder, GameState, Colors, BrushSize } = require("skribbler");
 
 const client = new Client({
 	name: "Skribbler"
@@ -29,8 +29,14 @@ client.on("stateUpdate", (data) => {
 			if(!client.canvas.canDraw) break;
 
 			console.log("Drawing... now!");
-			client.canvas.draw([[0,1,32,108,82,108,82],[0,1,6,108,82,117,82]]);
-			client.canvas.draw([[0,1,32,546,393,588,373],[0,1,6,588,373,627,354],[0,1,6,627,354,648,345]]);
+			const drawData = new DrawBuilder()
+				.fill(Colors.LIME, 0, 0)
+				.draw(Colors.RED, BrushSize.EXTRA_LARGE, 20, 20, 100, 120)
+				.draw(Colors.PINK, BrushSize.MEDIUM, 546, 234, 800, 700)
+				.draw(Colors.BLACK, BrushSize.EXTRA_SMALL, 0, 0, 900, 900)
+				.fill(Colors.CYAN, 100, 1);
+			
+			client.canvas.draw(drawData);
 
 			const interval = setInterval(() => {
 				// If there are no more commands left to undo then stop the interval

@@ -6,7 +6,7 @@ const { getServerUri } = require("../auth.js");
 // Web server
 const http = require("http");
 const { Server } = require("socket.io");
-const { io: clientIo} = require("socket.io-client");
+const { io: clientIo } = require("socket.io-client");
 
 class Proxy extends events {
 	/**
@@ -59,6 +59,7 @@ class Proxy extends events {
 				const options = {
 					httpHeaders: socket.handshake.headers,
 					lobbyCode: loginData.join,
+					serverUrl: "",
 
 					...this.options
 				};
