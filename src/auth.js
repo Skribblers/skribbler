@@ -58,8 +58,6 @@ async function getServerUri(options = {}) {
 async function joinLobby(options = {}) {
 	const { hostname, port } = await getServerUri(options);
 
-	console.log(hostname, port);
-
 	// Start websocket connection
 	const socket = io(hostname, {
 		extraHeaders: {

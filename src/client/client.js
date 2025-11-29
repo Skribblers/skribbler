@@ -1,8 +1,8 @@
 // @ts-check
 const events = require("events");
-const { joinLobby } = require("./auth.js");
+const { joinLobby } = require("../auth.js");
 
-const Constants = require("./constants.js");
+const Constants = require("../constants.js");
 
 class Client extends events {
 	/**

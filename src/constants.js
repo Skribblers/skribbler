@@ -7,7 +7,7 @@ const Packets = {
     "REPORT": 6,
     "MUTE": 7,
     "VOTE": 8,
-    "UPDATE_NAME": 9,
+    "UPDATE_AVATAR": 9,
     "LOBBY_DATA": 10,
     "UPDATE_GAME_STATE": 11,
     "UPDATE_SETTINGS": 12,
