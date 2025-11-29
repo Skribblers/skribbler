@@ -1,5 +1,4 @@
 // @ts-check
-
 const { Packets, UserFlags } = require("../constants.js");
 
 class ClientPlayer {

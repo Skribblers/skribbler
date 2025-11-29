@@ -120,10 +120,10 @@ class Client extends events {
 					this.emit("playerJoin", player);
 					break;
 				}
+
 				case Packets.PLAYER_LEAVE: {
 					if(
-						typeof data?.id !== "number" ||
-						typeof data.reason !== "number"
+						typeof data?.reason !== "number"
 					) return console.log(`Received invalid packet. ID: 2.`);
 
 					const index = this.players.findIndex(plr => plr.id === data.id);
@@ -135,9 +135,9 @@ class Client extends events {
 						player: player,
 						reason: data.reason
 					});
-
 					break;
 				}
+
 				case Packets.VOTEKICK: {
 					if(
 						!Array.isArray(data) ||
@@ -161,9 +161,9 @@ class Client extends events {
 					});
 					break;
 				}
+
 				case Packets.VOTE: {
 					if(
-						typeof data?.id !== "number" ||
 						typeof data?.vote !== "number"
 					) return console.log(`Received invalid packet. ID: 8.`);
 
@@ -176,7 +176,20 @@ class Client extends events {
 					});
 					break;
 				}
-				case Packets.LOBBY_DATA:
+
+				case Packets.UPDATE_AVATAR: {
+					if(
+						typeof data?.id !== "number"
+					) return console.log(`Received invalid packet. ID: 9.`);
+
+					const player = this.players.find(plr => plr.id === data.id);
+					if(!player) break;
+
+					player.avatar = data.avatar;
+					break;
+				}
+
+				case Packets.LOBBY_DATA: {
 					if(
 						!Array.isArray(data?.settings) ||
 						!Array.isArray(data?.users)
@@ -230,6 +243,8 @@ class Client extends events {
 
 					this.emit("connect");
 					break;
+				}
+
 				case Packets.UPDATE_GAME_STATE: {
 					if(
 						typeof data?.id !== "number" ||
@@ -376,6 +391,7 @@ class Client extends events {
 					}
 					break;
 				}
+
 				case Packets.UPDATE_SETTINGS: {
 					if(
 						typeof data?.id !== "number" ||
@@ -391,6 +407,7 @@ class Client extends events {
 					this.settings[setting] = data.val;
 					break;
 				}
+
 				case Packets.REVEAL_HINT: {
 					if(!Array.isArray(data)) return console.log(`Received invalid packet. ID: 13.`);
 
@@ -410,11 +427,14 @@ class Client extends events {
 					this.emit("hintRevealed", data);
 					break;
 				}
-				case Packets.UPDATE_TIME:
+
+				case Packets.UPDATE_TIME: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 14.`);
 
 					this.time = data - 1;
 					break;
+				}
+
 				case Packets.PLAYER_GUESSED: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 15.`);
 
@@ -432,11 +452,14 @@ class Client extends events {
 					});
 					break;
 				}
-				case Packets.CLOSE_WORD:
+
+				case Packets.CLOSE_WORD: {
 					if(typeof data !== "string") return console.log(`Received invalid packet. ID: 16.`);
 
 					this.emit("closeWord", data);
 					break;
+				}
+
 				case Packets.SET_OWNER: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 17.`);
 
@@ -451,16 +474,21 @@ class Client extends events {
 					});
 					break;
 				}
-				case Packets.DRAW:
+
+				case Packets.DRAW: {
 					this.canvas.push(...data);
 
 					this.emit("draw", data);
 					break;
-				case Packets.CLEAR_CANVAS:
+				}
+
+				case Packets.CLEAR_CANVAS: {
 					this.canvas = [];
 
 					this.emit("clearCanvas");
 					break;
+				}
+
 				case Packets.UNDO: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 21.`);
 
@@ -469,6 +497,7 @@ class Client extends events {
 					this.emit("undo", data);
 					break;
 				}
+
 				case Packets.TEXT: {
 					if(
 						typeof data?.id !== "number" ||
@@ -484,6 +513,7 @@ class Client extends events {
 					});
 					break;
 				}
+
 				case Packets.GAME_START_ERROR: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 31.`);
 
@@ -494,9 +524,23 @@ class Client extends events {
 					});
 					break;
 				}
+
+				case Packets.UPDATE_NAME: {
+					if(
+						typeof data?.id !== "number"
+					) return console.log(`Received invalid packet. ID: 90.`);
+
+					const player = this.players.find(plr => plr.id === data.id);
+					if(!player) break;
+
+					player.name = data.name;
+					break;
+				}
+
 				default:
 					this.emit(id, data);
 			}
+
 			this.emit("packet", {id, data});
 		});
 
@@ -605,9 +649,9 @@ class Client extends events {
 	 * @throws
 	 */
 	undo(id) {
-		if(!id) id = this.canvas.length - 1;
-
 		if(this.canvas.length === 1) return this.clearCanvas();
+
+		id ??= this.canvas.length - 1;
 
 		this.canvas.splice(id, 1);
 
