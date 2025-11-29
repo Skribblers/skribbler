@@ -32,7 +32,7 @@ class ClientPlayer {
     }
 
     get isHost() {
-        return this.client.ownerId === this.id;
+        return this.id === this.client.ownerId;
     }
 
     get isAdmin() {

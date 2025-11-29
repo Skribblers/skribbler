@@ -6,6 +6,11 @@ import * as events from "events";
 declare module "skribbler" {
 	export type ClientEvents = "connect" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "undo" | "vote" | "votekick" | "startError" | "stateUpdate" | Number
 
+	export enum Vote {
+		DISLIKE = 0,
+		LIKE
+	}
+
 	export interface ClientOptions {
 		name?: String
 		avatar?: Array<Number>
@@ -37,11 +42,6 @@ declare module "skribbler" {
 		useCustomWords?: Boolean
 	}
 
-	export enum Vote {
-		DISLIKE = 0,
-		LIKE
-	}
-
 	export class Client extends events {
 		constructor(options?: ClientOptions)
 
@@ -64,16 +64,13 @@ declare module "skribbler" {
 		time: Number
 		currentDrawer?: ClientPlayer | null
 		availableWords: Array<String>
-		canvas: Array<Array<Number>>
+		canvas: Canvas
 		word: String
 
 		init(): void
 		sendPacket(id: Number, data?: any): void
 		vote(voteType: Vote): void
 		updateSetting(settingId: String, val: String): void
-		draw(data: Array<Array<Number>>): void
-		clearCanvas(): void
-		undo(id?: Number): void
 		startGame(customWords?: Array<String>): void
 		endGame(): void
 		selectWord(word: Number | String): void
@@ -84,6 +81,7 @@ declare module "skribbler" {
 
 	export class ClientPlayer {
 		constructor(player: PlayerObject, client: Client)
+		client: Client
 
 		id: Number
 		name: String
@@ -100,6 +98,18 @@ declare module "skribbler" {
 		ban(): void
 		votekick(): void
 		report(): void
+	}
+
+	export class Canvas {
+		constructor(client: Client)
+		client: Client
+
+		drawCommands: Array<Array<Number>>
+		canDraw: Boolean
+
+		draw(data: Array<Array<Number>>): void
+		clear(): void
+		undo(id?: Number): void
 	}
 
 	type ProxyEvents = "playerJoin"

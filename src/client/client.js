@@ -1,6 +1,7 @@
 // @ts-check
 const events = require("events");
 const { ClientPlayer } = require("./ClientPlayer.js");
+const { Canvas } = require("./Canvas.js");
 const { joinLobby } = require("../auth.js");
 
 const { Packets, GameState, Vote } = require("../constants.js");
@@ -50,6 +51,9 @@ class Client extends events {
 	round = 0;
 
 	userId = null;
+	/**
+	 * @type {Number | null}
+	 */
 	ownerId = null;
 
 	lobbyType = null;
@@ -67,10 +71,7 @@ class Client extends events {
 	 * @type {Array<String>}
 	 */
 	availableWords = [];
-	/**
-	 * @type {Array<Number>}
-	 */
-	canvas = [];
+	canvas = new Canvas(this);
 	word = "";
 
 	async init() {
@@ -219,7 +220,7 @@ class Client extends events {
 
 					this.time = data.state?.time;
 					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id) ?? null;
-					this.canvas = data.state?.data?.drawCommands ?? [];
+					this.canvas.drawCommands = data.state?.data?.drawCommands ?? [];
 
 					if(Array.isArray(data.state?.data?.word)) {
 						for(const length of data.state.data.word) {
@@ -305,7 +306,7 @@ class Client extends events {
 						case GameState.CAN_DRAW: {
 							if(typeof data.data !== "object") return console.log(`Received invalid packet. ID: 11`);
 
-							this.canvas = [];
+							this.canvas.drawCommands = [];
 							this.availableWords = [];
 							this.currentDrawer = this.players.find(plr => plr.id === data.data?.id) ?? null;
 
@@ -379,7 +380,7 @@ class Client extends events {
 
 						// When a private lobby's game ends, reset all the player's scores
 						case GameState.IN_GAME_WAITING_ROOM: {
-							this.canvas = [];
+							this.canvas.drawCommands = [];
 							this.round = 0;
 
 							for(const player of this.players) {
@@ -468,7 +469,6 @@ class Client extends events {
 					const player = this.players.find(plr => plr.id === data);
 					if(!player) break;
 
-					// @ts-expect-error
 					this.ownerId = data;
 
 					this.emit("newOwner", {
@@ -478,14 +478,14 @@ class Client extends events {
 				}
 
 				case Packets.DRAW: {
-					this.canvas.push(...data);
+					this.canvas.drawCommands.push(...data);
 
 					this.emit("draw", data);
 					break;
 				}
 
 				case Packets.CLEAR_CANVAS: {
-					this.canvas = [];
+					this.canvas.drawCommands = [];
 
 					this.emit("clearCanvas");
 					break;
@@ -494,7 +494,7 @@ class Client extends events {
 				case Packets.UNDO: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 21.`);
 
-					this.canvas.splice(data);
+					this.canvas.drawCommands.splice(data, 1);
 
 					this.emit("undo", data);
 					break;
@@ -618,47 +618,6 @@ class Client extends events {
 		}
 
 		this.sendPacket(Packets.SELECT_WORD, word);
-	}
-
-	/**
-	 * @name draw
-	 * @description Draw on the canvas
-	 * @param {Array<Number>} data - Draw commands to send. If the array has more then 8 items, the server simply ignores the packet
-	 * @throws
-	 */
-	draw(data) {
-		if(!Array.isArray(data)) throw TypeError("Expected data to be an array");
-
-		this.canvas.push(...data);
-
-		this.sendPacket(Packets.DRAW, data);
-	}
-
-	/**
-	 * @name clearCanvas
-	 * @description Clear the canvas if you are the current drawer
-	 * @throws
-	 */
-	clearCanvas() {
-		this.canvas = [];
-
-		this.sendPacket(Packets.CLEAR_CANVAS);
-	}
-
-	/**
-	 * @name undo
-	 * @description Undo a draw event
-	 * @param {Number} [id]
-	 * @throws
-	 */
-	undo(id) {
-		if(this.canvas.length === 1) return this.clearCanvas();
-
-		id ??= this.canvas.length - 1;
-
-		this.canvas.splice(id, 1);
-
-		this.sendPacket(Packets.UNDO, id);
 	}
 
 	/**
