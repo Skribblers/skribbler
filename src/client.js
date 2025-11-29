@@ -318,6 +318,7 @@ class Client extends events {
 								player.guessed = false;
 								player.score = data.data.scores[(counter * 3) + 1];
 
+								// @ts-ignore
 								stateUpdate.newScores[player.name] = player.score;
 
 								counter++;
@@ -377,6 +378,7 @@ class Client extends events {
 
 					if(setting === "useCustomWords") data.val = data.val ? true : false;
 
+					// @ts-ignore
 					this.settings[setting] = data.val;
 					break;
 				}

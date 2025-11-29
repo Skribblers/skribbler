@@ -34,8 +34,14 @@ async function getServerUri(options = {}) {
 
 	if(request.status === 503) throw Error("Unable to get server URI. Either you are creating too many clients or skribbl.io is down.");
 
-	const serverURI = await request.text();
-	return serverURI;
+	const serverUrl = await request.text();
+
+	const url = new URL(serverUrl);
+
+	return {
+		hostname: url.protocol + "//" + url.hostname,
+		port: url.port
+	};
 }
 
 /**
@@ -50,10 +56,12 @@ async function getServerUri(options = {}) {
  * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */
 async function joinLobby(options = {}) {
-	const serverURI = await getServerUri(options);
+	const { hostname, port } = await getServerUri(options);
+
+	console.log(hostname, port);
 
 	// Start websocket connection
-	const socket = io(serverURI, {
+	const socket = io(hostname, {
 		extraHeaders: {
 			"User-Agent": userAgent,
 			"Accept": "*/*",
@@ -67,6 +75,7 @@ async function joinLobby(options = {}) {
 		},
 		reconnection: false,
 		transports: ["websocket", "polling"],
+		path: "/" + port,
 
 		...options.socketOptions
 	});
