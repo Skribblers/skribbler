@@ -9,7 +9,7 @@ class Client extends events {
 	 * @class
 	 * @param {Object} [options] - Options the client should use
 	 * @param {String} [options.name] - The username the bot should join with
-	 * @param {Array} [options.avatar] - The avatar the bot should join with
+	 * @param {Array<Number>} [options.avatar] - The avatar the bot should join with
 	 * @param {String} [options.lobbyCode] - The lobby code to join with
 	 * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
 	 * @param {Number} [options.language] - The langauge code to look for servers with. Not needed if a lobby code is set. Can be a number 1-27.
@@ -57,7 +57,13 @@ class Client extends events {
 	players = [];
 	time = 0;
 	currentDrawer = null;
+	/**
+	 * @type {Array<String>}
+	 */
 	availableWords = [];
+	/**
+	 * @type {Array<Number>}
+	 */
 	canvas = [];
 	word = "";
 
@@ -70,8 +76,8 @@ class Client extends events {
 		this.socket = socket;
 		this.connected = true;
 
-		let disconnectReason;
-		let joinErr;
+		let disconnectReason = "";
+		let joinErr = "";
 		socket.on("joinerr", (data) => {
 			joinErr = data;
 		});
@@ -604,7 +610,7 @@ class Client extends events {
 	/**
 	 * @name draw
 	 * @description Draw on the canvas
-	 * @param {Array[]} data - Draw Data. If the array has more then 8 items, the server simply ignores the packet
+	 * @param {Array<Number>} data - Draw commands to send. If the array has more then 8 items, the server simply ignores the packet
 	 * @throws
 	 */
 	draw(data) {
@@ -645,7 +651,7 @@ class Client extends events {
 	/**
 	 * @name startGame
 	 * @description Start the game if you are the owner of the private lobby
-	 * @param {Array} [customWords] - Custom words to use. Note: If there are less then 10 custom words, the server does not use the custom word list
+	 * @param {Array<String>} [customWords] - Custom words to use. Note: If there are less then 10 custom words, the server does not use the custom word list
 	 * @returns {Promise<Number | String>} startError
 	 * @async
 	 * @throws
@@ -656,7 +662,7 @@ class Client extends events {
 		this.sendPacket(22, customWords.join(", "));
 
 		return new Promise((resolve) => {
-			let resolved;
+			let resolved = false;
 			this.once("startError", (error) => {
 				resolved = true;
 				resolve(error);
