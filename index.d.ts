@@ -108,7 +108,7 @@ declare module "skribbler" {
 		port?: Number
 		lobbyCode?: String
 		language?: Number | String
-		serverURL?: String
+		serverUrl?: String
 		httpHeaders?: Object
 	}
 

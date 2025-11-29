@@ -71,8 +71,9 @@ class ClientPlayer {
 
     /**
 	 * @name report
+     * @description Report a player
      * @param {ReportBuilder} reason - Reason for the report
-	 * @description Report a player
+     * @throws
 	 */
 	report(reason) {
         if(!(reason instanceof ReportBuilder)) throw Error("Report reason must be made through the ReportBuilder class");

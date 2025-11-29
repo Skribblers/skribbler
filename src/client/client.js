@@ -561,8 +561,7 @@ class Client extends events {
 	 * @throws
 	 */
 	sendPacket(id, data) {
-		// @ts-expect-error
-		if(!this.socket?.connected) throw Error("Socket isnt initialized or is disconnected.");
+		if(!this.connected) throw Error("Socket isn't initialized or is disconnected");
 
 		// @ts-expect-error
 		this.socket.emit("data", {
@@ -720,10 +719,7 @@ class Client extends events {
 	 * @throws
 	 */
 	disconnect() {
-		// @ts-expect-error
-		if(!this.socket?.connected) throw Error("Socket is already disconnected");
-
-		this.connected = false;
+		if(!this.connected) throw Error("Socket is already disconnected");
 
 		// @ts-expect-error
 		this.socket.disconnect();
