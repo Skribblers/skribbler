@@ -56,18 +56,15 @@ declare module "skribbler" {
 
 		lobbyType?: Number
 
-		players: Array<PlayerObject>
+		players: Array<ClientPlayer>
 		time: Number
-		currentDrawer?: PlayerObject
+		currentDrawer?: ClientPlayer | null
 		availableWords: Array<String>
 		canvas: Array<Array<Number>>
 		word: String
 
 		init(): void
 		sendPacket(id: Number, data?: any): void
-		hostKick(userId: Number): void
-		hostBan(userId: Number): void
-		votekick(userId: Number): void
 		vote(id: Number | Vote): void
 		updateRoomSettings(settingId: String, val: String): void
 		draw(data: Array<Array<Number>>): void
@@ -79,6 +76,26 @@ declare module "skribbler" {
 		sendMessage(msg: String): void
 		disconnect(): void
 		on(event: ClientEvents, listener: Function): this
+	}
+
+	export class ClientPlayer {
+		constructor(player: PlayerObject, client: Client)
+
+		id: Number
+		name: String
+		avatar: Array<Number>
+		score: Number
+		guessed: Boolean
+		flags: Number
+
+		// Getter values
+		isHost: Boolean
+		isAdmin: Boolean
+
+		kick(): void
+		ban(): void
+		votekick(): void
+		report(): void
 	}
 
 	type ProxyEvents = "playerJoin"

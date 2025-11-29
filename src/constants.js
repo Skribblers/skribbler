@@ -111,6 +111,10 @@ const SettingsMaxValue = {
     7: 1
 };
 
+const UserFlags = {
+    "ADMIN": 4
+};
+
 module.exports = {
     Packets,
     LobbyType,
@@ -122,5 +126,6 @@ module.exports = {
     WordMode,
     Settings,
     SettingsMinValue,
-    SettingsMaxValue
+    SettingsMaxValue,
+    UserFlags
 };

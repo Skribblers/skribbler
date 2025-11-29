@@ -1,5 +1,6 @@
 // @ts-check
 const events = require("events");
+const { ClientPlayer } = require("./ClientPlayer.js");
 const { joinLobby } = require("../auth.js");
 
 const Constants = require("../constants.js");
@@ -16,7 +17,7 @@ class Client extends events {
 	 * @param {string} [options.serverURL] - The server to log into. This can be used in combination with a Proxy or a custom Server
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
 	 * @param {Object} [options.socketOptions] - Options to use for socket.io-client
-	 * @throws {TypeError}
+	 * @throws {Error | TypeError}
 	 */
 	constructor(options = {}) {
 		super();
@@ -53,8 +54,14 @@ class Client extends events {
 
 	lobbyType = null;
 
+	/**
+	 * @type {ClientPlayer[]}
+	 */
 	players = [];
 	time = 0;
+	/**
+	 * @type {ClientPlayer | null}
+	 */
 	currentDrawer = null;
 	/**
 	 * @type {Array<String>}
@@ -107,8 +114,10 @@ class Client extends events {
 				case Constants.Packets.PLAYER_JOIN: {
 					if(typeof data !== "object") return console.log(`Received invalid packet. ID: 1.`);
 
-					this.players.push(data);
-					this.emit("playerJoin", data);
+					const player = new ClientPlayer(data, this);
+
+					this.players.push(player);
+					this.emit("playerJoin", player);
 					break;
 				}
 				case Constants.Packets.PLAYER_LEAVE: {
@@ -196,7 +205,7 @@ class Client extends events {
 					this.players = data.users;
 
 					this.time = data.state?.time;
-					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id);
+					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id) ?? null;
 					this.canvas = this.canvas.concat(data.state?.data?.drawCommands);
 
 					if(Array.isArray(data.state?.data?.word)) {
@@ -264,7 +273,7 @@ class Client extends events {
 						case Constants.GameState.USER_PICKING_WORD: {
 							if(typeof data.data?.id !== "number") return console.log(`Received invalid packet. ID: 11`);
 
-							this.currentDrawer = this.players.find(plr => plr.id === data.data.id);
+							this.currentDrawer = this.players.find(plr => plr.id === data.data.id) ?? null;
 							this.availableWords = data.data.words;
 
 							this.emit("stateUpdate", {
@@ -281,7 +290,7 @@ class Client extends events {
 
 							this.canvas = [];
 							this.availableWords = [];
-							this.currentDrawer = this.players.find(plr => plr.id === data.data?.id);
+							this.currentDrawer = this.players.find(plr => plr.id === data.data?.id) ?? null;
 
 							if(Array.isArray(data.data.word)) {
 								for(const length of data.data.word) {
@@ -517,42 +526,6 @@ class Client extends events {
 	}
 
 	/**
-	 * @name hostKick
-	 * @description If you are the host of a lobby, this will kick the player out of the lobby
-	 * @param {Number} userId - The ID of the user who will be getting votekicked
-	 * @throws
-	 */
-	hostKick(userId) {
-		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
-
-		this.sendPacket(3, userId);
-	}
-
-	/**
-	 * @name hostBan
-	 * @description If you are the host of a lobby, this will ban the player's IP from ever joining that lobby
-	 * @param {Number} userId - The ID of the user to ban
-	 * @throws
-	 */
-	hostBan(userId) {
-		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
-
-		this.sendPacket(4, userId);
-	}
-
-	/**
-	 * @name votekick
-	 * @description Votekick a user. If the player gets enough votes, they will be kicked.
-	 * @param {Number} userId - The ID of the user who will be getting votekicked
-	 * @throws
-	 */
-	votekick(userId) {
-		if(typeof userId !== "number") throw TypeError("Expected userId to be type of Number");
-
-		this.sendPacket(5, userId);
-	}
-
-	/**
 	 * @name vote
 	 * @description Vote on an image
 	 * @param {Number | String} id - Can be either 0, 1, like or dislike
@@ -714,5 +687,6 @@ class Client extends events {
 }
 
 module.exports = {
-	Client
+	Client,
+	ClientPlayer
 };
