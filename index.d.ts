@@ -4,12 +4,92 @@ import { Socket } from "socket.io-client";
 import * as events from "events";
 
 declare module "skribbler" {
-	export type ClientEvents = "connect" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "undo" | "vote" | "votekick" | "startError" | "stateUpdate" | Number
+	export enum Packets {
+		PLAYER_JOIN = 1,
+		PLAYER_LEAVE,
+		HOST_KICK,
+		HOST_BAN,
+		VOTEKICK,
+		REPORT,
+		MUTE,
+		VOTE,
+		UPDATE_AVATAR,
+		LOBBY_DATA,
+		UPDATE_GAME_STATE,
+		UPDATE_SETTINGS,
+		REVEAL_HINT,
+		UPDATE_TIME,
+		PLAYER_GUESSED,
+		CLOSE_WORD,
+		SET_OWNER,
+		SELECT_WORD,
+		DRAW,
+		CLEAR_CANVAS,
+		UNDO,
+		START_GAME,
+		END_GAME,
+		TEXT = 30,
+		GAME_START_ERROR,
+		SPAM_DETECTED,
+		UPDATE_NAME = 90
+	}
+
+	export enum LobbyType {
+		PUBLIC = 0,
+		PRIVATE
+	}
+
+	export enum LeaveReason {
+		DISCONNECT = 0,
+		KICKED,
+		BANNED
+	}
+
+	export enum JoinError {
+		ROOM_NOT_FOUND = 1,
+		ROOM_FULL,
+		KICK_COOLDOWN,
+		BANNED_FROM_ROOM,
+		JOINING_ROOMS_TOO_QUICKLY,
+		ALREADY_CONNECTED = 100,
+		TOO_MANY_IP_CONNECTIONS = 200,
+		KICKED_TOO_MANY_TIMES = 300
+	}
+
+	export enum GameState {
+		WAITING_FOR_PLAYERS = 0,
+		GAME_STARTING_SOON,
+		CURRENT_ROUND,
+		USER_PICKING_WORD,
+		CAN_DRAW,
+		DRAW_RESULTS,
+		GAME_RESULTS,
+		IN_GAME_WAITING_ROOM
+	}
+
+	export enum GameStartError {
+		NOT_ENOUGH_PLAYERS = 0,
+		SERVER_RESTART_SOON = 100
+	}
+
+	export enum DrawResultsReason {
+		EVERYONE_GUESSED = 0,
+		TIME_IS_UP,
+		DRAWER_LEFT
+	}
+
+	export enum WordMode {
+		NORMAL = 0,
+		HIDDEN,
+		COMBINATION
+	}
 
 	export enum Vote {
 		DISLIKE = 0,
 		LIKE
 	}
+
+	export type ClientEvents = "connect" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "undo" | "vote" | "votekick" | "startError" | "stateUpdate" | Number
 
 	export interface ClientOptions {
 		name?: String
@@ -38,7 +118,7 @@ declare module "skribbler" {
 		maxRounds?: Number
 		wordCount?: Number
 		maxHints?: Number
-		wordMode?: Number
+		wordMode?: WordMode
 		useCustomWords?: Boolean
 	}
 
@@ -58,7 +138,7 @@ declare module "skribbler" {
 		userId?: Number
 		ownerId?: Number
 
-		lobbyType?: Number
+		lobbyType?: LobbyType
 
 		players: Array<ClientPlayer>
 		time: Number
@@ -101,7 +181,7 @@ declare module "skribbler" {
 		kick(): void
 		ban(): void
 		votekick(): void
-		report(): void
+		report(ReportBuilder): void
 	}
 
 	export class Canvas {

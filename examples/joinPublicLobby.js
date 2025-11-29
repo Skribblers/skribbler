@@ -1,5 +1,5 @@
 // @ts-check
-const { Client, Constants } = require("skribbler");
+const { Client, GameState } = require("skribbler");
 
 const client = new Client({
 	name: "Skribbler"
@@ -16,7 +16,7 @@ client.on("text", (data) => {
 client.on("stateUpdate", (data) => {
 	switch(data.state) {
 		// When given a chance to choose a word to draw, the bot will select the 2nd word
-		case Constants.GameState.USER_PICKING_WORD: {
+		case GameState.USER_PICKING_WORD: {
 			if(!data.words) break;
 
 			console.log(`Selected ${data.words[1]} to draw!`);
@@ -25,7 +25,7 @@ client.on("stateUpdate", (data) => {
 		}
 
 		// Once the bot can draw, it will draw random stuff and then undo it
-		case Constants.GameState.CAN_DRAW: {
+		case GameState.CAN_DRAW: {
 			if(!client.canvas.canDraw) break;
 
 			console.log("Drawing... now!");

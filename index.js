@@ -9,6 +9,7 @@ module.exports = {
 	ClientPlayer,
 	Proxy,
 	ProxyPlayer,
-	Constants,
-	ReportBuilder
+	ReportBuilder,
+
+	...Constants
 };

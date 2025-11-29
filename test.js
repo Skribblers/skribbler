@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const { Client, Proxy } = require("./index.js");
 
 const random1 = crypto.randomBytes(16).toString("hex");
-const random2  = crypto.randomBytes(16).toString("hex");
+const random2 = crypto.randomBytes(16).toString("hex");
 
 const proxy = new Proxy({
 	port: 5732
