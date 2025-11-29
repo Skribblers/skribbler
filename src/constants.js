@@ -115,6 +115,11 @@ const UserFlags = {
     "ADMIN": 4
 };
 
+const Vote = {
+    "DISLIKE": 0,
+    "LIKE": 1
+}
+
 module.exports = {
     Packets,
     LobbyType,
@@ -127,5 +132,6 @@ module.exports = {
     Settings,
     SettingsMinValue,
     SettingsMaxValue,
-    UserFlags
+    UserFlags,
+    Vote
 };

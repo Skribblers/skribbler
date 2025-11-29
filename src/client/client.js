@@ -3,7 +3,7 @@ const events = require("events");
 const { ClientPlayer } = require("./ClientPlayer.js");
 const { joinLobby } = require("../auth.js");
 
-const Constants = require("../constants.js");
+const { Packets, GameState, Vote } = require("../constants.js");
 
 class Client extends events {
 	/**
@@ -111,7 +111,7 @@ class Client extends events {
 			if(data === null) return;
 
 			switch(id) {
-				case Constants.Packets.PLAYER_JOIN: {
+				case Packets.PLAYER_JOIN: {
 					if(typeof data !== "object") return console.log(`Received invalid packet. ID: 1.`);
 
 					const player = new ClientPlayer(data, this);
@@ -120,7 +120,7 @@ class Client extends events {
 					this.emit("playerJoin", player);
 					break;
 				}
-				case Constants.Packets.PLAYER_LEAVE: {
+				case Packets.PLAYER_LEAVE: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data.reason !== "number"
@@ -138,7 +138,7 @@ class Client extends events {
 
 					break;
 				}
-				case Constants.Packets.VOTEKICK: {
+				case Packets.VOTEKICK: {
 					if(
 						!Array.isArray(data) ||
 						typeof data[0] !== "number" ||
@@ -161,7 +161,7 @@ class Client extends events {
 					});
 					break;
 				}
-				case Constants.Packets.VOTE: {
+				case Packets.VOTE: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.vote !== "number"
@@ -176,7 +176,7 @@ class Client extends events {
 					});
 					break;
 				}
-				case Constants.Packets.LOBBY_DATA:
+				case Packets.LOBBY_DATA:
 					if(
 						!Array.isArray(data?.settings) ||
 						!Array.isArray(data?.users)
@@ -230,7 +230,7 @@ class Client extends events {
 
 					this.emit("connect");
 					break;
-				case Constants.Packets.UPDATE_GAME_STATE: {
+				case Packets.UPDATE_GAME_STATE: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.time !== "number"
@@ -242,15 +242,15 @@ class Client extends events {
 					// Handle game state
 					switch(data.id) {
 						// Pass through
-						case Constants.GameState.GAME_STARTING_SOON:
-						case Constants.GameState.WAITING_FOR_PLAYERS: {
+						case GameState.GAME_STARTING_SOON:
+						case GameState.WAITING_FOR_PLAYERS: {
 							this.emit("stateUpdate", {
 								state: data.id
 							});
 							break;
 						}
 
-						case Constants.GameState.CURRENT_ROUND: {
+						case GameState.CURRENT_ROUND: {
 							if(typeof data.data !== "number") return console.log(`Received invalid packet. ID: 11`);
 
 							// @ts-ignore
@@ -270,7 +270,7 @@ class Client extends events {
 							break;
 						}
 
-						case Constants.GameState.USER_PICKING_WORD: {
+						case GameState.USER_PICKING_WORD: {
 							if(typeof data.data?.id !== "number") return console.log(`Received invalid packet. ID: 11`);
 
 							this.currentDrawer = this.players.find(plr => plr.id === data.data.id) ?? null;
@@ -285,7 +285,7 @@ class Client extends events {
 							break;
 						}
 
-						case Constants.GameState.CAN_DRAW: {
+						case GameState.CAN_DRAW: {
 							if(typeof data.data !== "object") return console.log(`Received invalid packet. ID: 11`);
 
 							this.canvas = [];
@@ -310,7 +310,7 @@ class Client extends events {
 							break;
 						}
 
-						case Constants.GameState.DRAW_RESULTS: {
+						case GameState.DRAW_RESULTS: {
 							if(!Array.isArray(data.data?.scores)) return console.log(`Received invalid packet. ID: 11`);
 
 							this.word = "";
@@ -337,7 +337,7 @@ class Client extends events {
 							break;
 						}
 
-						case Constants.GameState.GAME_RESULTS: {
+						case GameState.GAME_RESULTS: {
 							if(!Array.isArray(data.data)) return console.log(`Received invalid packet. ID: 11`);
 
 							const leaderboard = [];
@@ -361,7 +361,7 @@ class Client extends events {
 						}
 
 						// When a private lobby's game ends, reset all the player's scores
-						case Constants.GameState.IN_GAME_WAITING_ROOM: {
+						case GameState.IN_GAME_WAITING_ROOM: {
 							this.canvas = [];
 							this.round = 0;
 
@@ -376,7 +376,7 @@ class Client extends events {
 					}
 					break;
 				}
-				case Constants.Packets.UPDATE_SETTINGS: {
+				case Packets.UPDATE_SETTINGS: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.val !== "number"
@@ -391,7 +391,7 @@ class Client extends events {
 					this.settings[setting] = data.val;
 					break;
 				}
-				case Constants.Packets.REVEAL_HINT: {
+				case Packets.REVEAL_HINT: {
 					if(!Array.isArray(data)) return console.log(`Received invalid packet. ID: 13.`);
 
 					const characters = this.word.split("");
@@ -410,12 +410,12 @@ class Client extends events {
 					this.emit("hintRevealed", data);
 					break;
 				}
-				case Constants.Packets.UPDATE_TIME:
+				case Packets.UPDATE_TIME:
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 14.`);
 
 					this.time = data - 1;
 					break;
-				case Constants.Packets.PLAYER_GUESSED: {
+				case Packets.PLAYER_GUESSED: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 15.`);
 
 					const player = this.players.find(plr => plr.id === data.id);
@@ -432,12 +432,12 @@ class Client extends events {
 					});
 					break;
 				}
-				case Constants.Packets.CLOSE_WORD:
+				case Packets.CLOSE_WORD:
 					if(typeof data !== "string") return console.log(`Received invalid packet. ID: 16.`);
 
 					this.emit("closeWord", data);
 					break;
-				case Constants.Packets.SET_OWNER: {
+				case Packets.SET_OWNER: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 17.`);
 
 					const player = this.players.find(plr => plr.id === data);
@@ -451,17 +451,17 @@ class Client extends events {
 					});
 					break;
 				}
-				case Constants.Packets.DRAW:
+				case Packets.DRAW:
 					this.canvas.push(...data);
 
 					this.emit("draw", data);
 					break;
-				case Constants.Packets.CLEAR_CANVAS:
+				case Packets.CLEAR_CANVAS:
 					this.canvas = [];
 
 					this.emit("clearCanvas");
 					break;
-				case Constants.Packets.UNDO: {
+				case Packets.UNDO: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 21.`);
 
 					this.canvas.splice(data);
@@ -469,7 +469,7 @@ class Client extends events {
 					this.emit("undo", data);
 					break;
 				}
-				case Constants.Packets.TEXT: {
+				case Packets.TEXT: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.msg !== "string"
@@ -484,7 +484,7 @@ class Client extends events {
 					});
 					break;
 				}
-				case Constants.Packets.GAME_START_ERROR: {
+				case Packets.GAME_START_ERROR: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 31.`);
 
 					this.emit("startError", {
@@ -528,19 +528,11 @@ class Client extends events {
 	/**
 	 * @name vote
 	 * @description Vote on an image
-	 * @param {Number | String} id - Can be either 0, 1, like or dislike
+	 * @param {Vote} voteType - The type of vote
 	 * @throws
 	 */
-	vote(id) {
-		if(typeof id !== "number" && typeof id !== "string") throw TypeError("Expected id to be type of String or Number");
-
-		if(id === "dislike") id = 0;
-			else if(id === "like") id = 1;
-
-		// @ts-expect-error
-		if(id < 0 || id > 1) throw Error("Invalid vote option");
-
-		this.sendPacket(8, id);
+	vote(voteType) {
+		this.sendPacket(Packets.VOTE, voteType);
 	}
 
 	/**
@@ -554,7 +546,7 @@ class Client extends events {
 		if(typeof settingId !== "string" && typeof settingId !== "number") throw TypeError("Expected settingId to be type of String or Number");
 		if(typeof val !== "string" && typeof settingId !== "number") throw TypeError("Expected val to be type of String or Number");
 
-		this.sendPacket(12, {
+		this.sendPacket(Packets.UPDATE_SETTINGS, {
 			id: String(settingId),
 			val: String(val)
 		});
@@ -578,7 +570,7 @@ class Client extends events {
 			}
 		}
 
-		this.sendPacket(18, word);
+		this.sendPacket(Packets.SELECT_WORD, word);
 	}
 
 	/**
@@ -592,7 +584,7 @@ class Client extends events {
 
 		this.canvas.push(...data);
 
-		this.sendPacket(19, data);
+		this.sendPacket(Packets.DRAW, data);
 	}
 
 	/**
@@ -603,7 +595,7 @@ class Client extends events {
 	clearCanvas() {
 		this.canvas = [];
 
-		this.sendPacket(20);
+		this.sendPacket(Packets.CLEAR_CANVAS);
 	}
 
 	/**
@@ -619,7 +611,7 @@ class Client extends events {
 
 		this.canvas.splice(id, 1);
 
-		this.sendPacket(21, id);
+		this.sendPacket(Packets.UNDO, id);
 	}
 
 	/**
@@ -633,7 +625,7 @@ class Client extends events {
 	async startGame(customWords = []) {
 		if(!Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
 
-		this.sendPacket(22, customWords.join(", "));
+		this.sendPacket(Packets.REQUEST_GAME_START, customWords.join(", "));
 
 		return new Promise((resolve) => {
 			let resolved = false;
@@ -655,7 +647,7 @@ class Client extends events {
 	 * @throws
 	 */
 	endGame() {
-		this.sendPacket(23);
+		this.sendPacket(Packets.END_GAME);
 	}
 
 	/**
@@ -667,7 +659,7 @@ class Client extends events {
 	sendMessage(msg) {
 		if(typeof msg !== "string") throw TypeError("Expected msg to be type of String");
 
-		this.sendPacket(30, msg);
+		this.sendPacket(Packets.TEXT, msg);
 	}
 
 	/**

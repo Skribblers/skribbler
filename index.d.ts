@@ -4,7 +4,6 @@ import { Socket } from "socket.io-client";
 import * as events from "events";
 
 declare module "skribbler" {
-	export type Vote = "like" | "dislike"
 	export type ClientEvents = "connect" | "packet" | "disconnect" | "playerJoin" | "playerLeave" | "hintRevealed" | "playerGuessed" | "closeWord" | "newOwner" | "draw" | "clearCanvas" | "text" | "undo" | "vote" | "votekick" | "startError" | "stateUpdate" | Number
 
 	export interface ClientOptions {
@@ -38,6 +37,11 @@ declare module "skribbler" {
 		useCustomWords?: Boolean
 	}
 
+	export enum Vote {
+		DISLIKE = 0,
+		LIKE
+	}
+
 	export class Client extends events {
 		constructor(options?: ClientOptions)
 
@@ -65,7 +69,7 @@ declare module "skribbler" {
 
 		init(): void
 		sendPacket(id: Number, data?: any): void
-		vote(id: Number | Vote): void
+		vote(voteType: Vote): void
 		updateRoomSettings(settingId: String, val: String): void
 		draw(data: Array<Array<Number>>): void
 		clearCanvas(): void
