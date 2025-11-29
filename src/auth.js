@@ -51,7 +51,6 @@ async function getServerUri(options = {}) {
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
- * @param {string} [options.serverURL] - The server to log into. This can be used in combination with a Proxy or a custom Server
  * @param {Object} [options.httpHeaders] - HTTP headers to use
  * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */

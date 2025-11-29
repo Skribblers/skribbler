@@ -136,4 +136,14 @@ declare module "skribbler" {
 		disconnect(): void
 		on(event: ProxyPlayerEvents, callback: Function): this
 	}
+
+	export class ReportBuilder {
+		bitfield: Number
+
+		inappropriateBehavior: Boolean
+		spam: Boolean
+		cheating: Boolean
+
+		toValue(): Number
+	}
 }

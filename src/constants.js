@@ -120,6 +120,12 @@ const Vote = {
     "LIKE": 1
 }
 
+const ReportReasons = {
+    "INAPPROPRIATE_BEHAVIOR": 1,
+    "SPAM": 2,
+    "CHEATING": 4
+};
+
 module.exports = {
     Packets,
     LobbyType,
@@ -133,5 +139,6 @@ module.exports = {
     SettingsMinValue,
     SettingsMaxValue,
     UserFlags,
-    Vote
+    Vote,
+    ReportReasons
 };

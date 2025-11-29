@@ -219,7 +219,7 @@ class Client extends events {
 
 					this.time = data.state?.time;
 					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id) ?? null;
-					this.canvas = this.canvas.concat(data.state?.data?.drawCommands);
+					this.canvas = data.state?.data?.drawCommands ?? [];
 
 					if(Array.isArray(data.state?.data?.word)) {
 						for(const length of data.state.data.word) {

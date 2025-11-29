@@ -1,4 +1,5 @@
 // @ts-check
+const { ReportBuilder } = require("../builders/ReportBuilder.js");
 const { Packets, UserFlags } = require("../constants.js");
 
 class ClientPlayer {
@@ -70,13 +71,15 @@ class ClientPlayer {
 
     /**
 	 * @name report
-     * @param {Number} reason - Reason for the report
+     * @param {ReportBuilder} reason - Reason for the report
 	 * @description Report a player
 	 */
 	report(reason) {
+        if(!(reason instanceof ReportBuilder)) throw Error("Report reason must be made through the ReportBuilder class");
+
 		this.client.sendPacket(Packets.REPORT, {
             id: this.id,
-            reason
+            reason: reason.toValue()
         });
 	}
 }
