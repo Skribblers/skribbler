@@ -7,8 +7,9 @@ const Packets = {
     "REPORT": 6,
     "MUTE": 7,
     "VOTE": 8,
+    "UPDATE_NAME": 9,
     "LOBBY_DATA": 10,
-    "UPDATE_GAME_DATA": 11,
+    "UPDATE_GAME_STATE": 11,
     "UPDATE_SETTINGS": 12,
     "REVEAL_HINT": 13,
     "UPDATE_TIME": 14,
@@ -23,7 +24,8 @@ const Packets = {
     "END_GAME": 23,
     "TEXT": 30,
     "GAME_START_ERROR": 31,
-    "SPAM_DETECTED": 32
+    "SPAM_DETECTED": 32,
+    "UPDATE_NAME": 90
 };
 
 const LobbyType = {

@@ -222,7 +222,7 @@ class Client extends events {
 
 					this.emit("connect");
 					break;
-				case Constants.Packets.UPDATE_GAME_DATA: {
+				case Constants.Packets.UPDATE_GAME_STATE: {
 					if(
 						typeof data?.id !== "number" ||
 						typeof data?.time !== "number"
