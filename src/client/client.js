@@ -288,6 +288,8 @@ class Client extends events {
 						case GameState.USER_PICKING_WORD: {
 							if(typeof data.data?.id !== "number") return console.log(`Received invalid packet. ID: 11`);
 
+							this.word = "";
+
 							this.currentDrawer = this.players.find(plr => plr.id === data.data.id) ?? null;
 							this.availableWords = data.data.words;
 
@@ -328,7 +330,7 @@ class Client extends events {
 						case GameState.DRAW_RESULTS: {
 							if(!Array.isArray(data.data?.scores)) return console.log(`Received invalid packet. ID: 11`);
 
-							this.word = "";
+							this.word = data.data.word;
 
 							const stateUpdate = {
 								state: data.id,
@@ -673,7 +675,7 @@ class Client extends events {
 
 		if(!Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
 
-		this.sendPacket(Packets.REQUEST_GAME_START, customWords.join(", "));
+		this.sendPacket(Packets.START_GAME, customWords.join(", "));
 
 		return new Promise((resolve) => {
 			let resolved = false;

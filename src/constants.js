@@ -20,7 +20,7 @@ const Packets = {
     "DRAW": 19,
     "CLEAR_CANVAS": 20,
     "UNDO": 21,
-    "REQUEST_GAME_START": 22,
+    "START_GAME": 22,
     "END_GAME": 23,
     "TEXT": 30,
     "GAME_START_ERROR": 31,
