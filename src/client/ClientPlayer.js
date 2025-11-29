@@ -35,6 +35,10 @@ class ClientPlayer {
         return this.id === this.client.ownerId;
     }
 
+    get isDrawer() {
+        return this.id === this.client.currentDrawer?.id;
+    }
+
     get isAdmin() {
         return (this.flags & UserFlags.ADMIN) === UserFlags.ADMIN;
     }
@@ -45,7 +49,7 @@ class ClientPlayer {
 	 * @throws
 	 */
 	kick() {
-        if(this.client.userId !== this.client.ownerId) throw Error("ClientPlayer#kick can only be used if you're the host");
+        if(!this.client.isHost) throw Error("ClientPlayer#kick can only be used if you're the host");
 
 		this.client.sendPacket(Packets.HOST_KICK, this.id);
 	}
@@ -56,7 +60,7 @@ class ClientPlayer {
 	 * @throws
 	 */
 	ban() {
-        if(this.client.userId !== this.client.ownerId) throw Error("ClientPlayer#ban can only be used if you're the host");
+        if(!this.client.isHost) throw Error("ClientPlayer#ban can only be used if you're the host");
 
 		this.client.sendPacket(Packets.HOST_BAN, this.id);
 	}

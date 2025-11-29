@@ -17,7 +17,7 @@ class Canvas {
     }
 
     get canDraw() {
-        return this.client.userId === this.client.currentDrawer.id;
+        return this.client.userId === this.client.currentDrawer?.id;
     }
 
 	/**

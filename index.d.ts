@@ -67,13 +67,16 @@ declare module "skribbler" {
 		canvas: Canvas
 		word: String
 
+		// Getter values
+		readonly isHost: Boolean
+
 		init(): void
 		sendPacket(id: Number, data?: any): void
 		vote(voteType: Vote): void
-		updateSetting(settingId: String, val: String): void
+		updateSetting(settingId: String | Number, val: String | Number): void
 		startGame(customWords?: Array<String>): void
 		endGame(): void
-		selectWord(word: Number | String): void
+		selectWord(word: String | Number): void
 		sendMessage(msg: String): void
 		disconnect(): void
 		on(event: ClientEvents, listener: Function): this
@@ -91,8 +94,9 @@ declare module "skribbler" {
 		flags: Number
 
 		// Getter values
-		isHost: Boolean
-		isAdmin: Boolean
+		readonly isHost: Boolean
+		readonly isDrawer: Boolean
+		readonly isAdmin: Boolean
 
 		kick(): void
 		ban(): void
@@ -105,7 +109,7 @@ declare module "skribbler" {
 		client: Client
 
 		drawCommands: Array<Array<Number>>
-		canDraw: Boolean
+		readonly canDraw: Boolean
 
 		draw(data: Array<Array<Number>>): void
 		clear(): void

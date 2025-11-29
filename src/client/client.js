@@ -553,6 +553,10 @@ class Client extends events {
 		}, 1000);
 	}
 
+	get isHost() {
+		return this.userId === this.ownerId
+	}
+
 	/**
 	 * @name sendPacket
 	 * @description Sends a data packet to the server
@@ -588,7 +592,7 @@ class Client extends events {
 	 * @throws
 	 */
 	updateSetting(settingId, val) {
-		if(this.userId !== this.ownerId) throw Error("Client#updateSetting can only be used if you're the host");
+		if(!this.isHost) throw Error("Client#updateSetting can only be used if you're the host");
 
 		if(typeof settingId !== "string" && typeof settingId !== "number") throw TypeError("Expected settingId to be type of String or Number");
 		if(typeof val !== "string" && typeof settingId !== "number") throw TypeError("Expected val to be type of String or Number");
@@ -602,7 +606,7 @@ class Client extends events {
 	/**
 	 * @name selectWord
 	 * @description The word to select to draw. You can listen to the stateUpdate event and wait for a state id of 3. The event will provide an array of all the possible words. The exact word or the array index number are accepted
-	 * @param {Number | String} word - The word to select
+	 * @param {String | Number} word - The word to select
 	 * @throws
 	 */
 	selectWord(word) {
@@ -629,7 +633,7 @@ class Client extends events {
 	 * @throws
 	 */
 	async startGame(customWords = []) {
-		if(this.userId !== this.ownerId) throw Error("Client#startGame can only be used if you're the host");
+		if(!this.isHost) throw Error("Client#startGame can only be used if you're the host");
 
 		if(!Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
 
@@ -655,7 +659,7 @@ class Client extends events {
 	 * @throws
 	 */
 	endGame() {
-		if(this.userId !== this.ownerId) throw Error("Client#endGame can only be used if you're the host");
+		if(!this.isHost) throw Error("Client#endGame can only be used if you're the host");
 
 		this.sendPacket(Packets.END_GAME);
 	}
