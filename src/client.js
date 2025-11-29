@@ -22,15 +22,14 @@ class Client extends events {
 		super();
 
 		if(typeof options !== "object") throw TypeError("Client options is not an object.");
-		if(typeof options.httpHeaders !== "object") options.httpHeaders = {};
-
-		if(options.createPrivateRoom && options.lobbyCode) throw TypeError("Cannot create a private room with a lobby code.");
-		if(!options.language) options.language = 0;
-
-		if(!Array.isArray(options.avatar)) options.avatar = [
-			Math.floor(100 * Math.random()) % 26,
-			Math.floor(100 * Math.random()) % 57,
-			Math.floor(100 * Math.random()) % 51,
+		if(options.createPrivateRoom && options.lobbyCode) throw Error("Cannot create a private room with a lobby code.");
+		
+		options.httpHeaders ??= {};
+		options.language ??= 0;
+		options.avatar ??= [
+			Math.floor(Math.random() * 26),
+			Math.floor(Math.random() * 57),
+			Math.floor(Math.random() * 51),
 			-1
 		];
 
