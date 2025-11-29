@@ -76,15 +76,15 @@ class ClientPlayer {
     /**
 	 * @name report
      * @description Report a player
-     * @param {ReportBuilder} reason - Reason for the report
+     * @param {Number | ReportBuilder} reason - Reason for the report
      * @throws
 	 */
 	report(reason) {
-        if(!(reason instanceof ReportBuilder)) throw Error("Report reason must be made through the ReportBuilder class");
+        if(!(reason instanceof ReportBuilder) && typeof reason !== "number") throw Error("Report reason must either be a number or an instance of ReportBuilder");
 
 		this.client.sendPacket(Packets.REPORT, {
             id: this.id,
-            reason: reason.toValue()
+            reason: reason instanceof ReportBuilder ? reason.toValue() : reason
         });
 	}
 }

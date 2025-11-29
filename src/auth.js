@@ -2,13 +2,12 @@
 const fetch = require("node-fetch");
 const { io } = require("socket.io-client");
 
-const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
 
 /**
  * @param {Object} [options] - Options the client should use
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
- * @param {string} [options.serverURL] - The server to log into. This can be used in combination with a Proxy or a custom Server
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
 async function getServerUri(options = {}) {
@@ -32,7 +31,7 @@ async function getServerUri(options = {}) {
 		body: body
 	});
 
-	if(request.status === 503) throw Error("Unable to get server URI. Either you are creating too many clients or skribbl.io is down.");
+	if(request.status === 503) throw Error("Unable to get server URI; either you are creating too many clients or skribbl.io is down");
 
 	const serverUrl = await request.text();
 

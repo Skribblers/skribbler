@@ -215,7 +215,7 @@ declare module "skribbler" {
 
 		players: Array<ClientPlayer>
 		time: Number
-		currentDrawer?: ClientPlayer | null
+		currentDrawer: ClientPlayer | null
 		availableWords: Array<String>
 		canvas: Canvas
 		word: String
@@ -254,7 +254,7 @@ declare module "skribbler" {
 		kick(): void
 		ban(): void
 		votekick(): void
-		report(ReportBuilder): void
+		report(reason: Number | ReportBuilder): void
 	}
 
 	export class Canvas {
