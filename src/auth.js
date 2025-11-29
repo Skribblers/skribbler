@@ -59,6 +59,7 @@ async function joinLobby(options = {}) {
 
 	// Start websocket connection
 	const socket = io(hostname, {
+		// @ts-expect-error
 		extraHeaders: {
 			"User-Agent": userAgent,
 			"Accept": "*/*",

@@ -28,6 +28,37 @@ const Packets = {
     "UPDATE_NAME": 90
 };
 
+const Language = {
+    "ENGLISH": 0,
+    "GERMAN": 1,
+    "BULGARIAN": 2,
+    "CZECH": 3,
+    "DANISH": 4,
+    "DUTCH": 5,
+    "FINNISH": 6,
+    "FRENCH": 7,
+    "ESTONIAN": 8,
+    "GREEK": 9,
+    "HEBREW": 10,
+    "HUNGARIAN": 11,
+    "ITALIAN": 12,
+    "JAPANESE": 13,
+    "KOREAN": 14,
+    "LATVIAN": 15,
+    "MACEDONIAN": 16,
+    "NORWEGIAN": 17,
+    "PORTUGUESE": 18,
+    "POLISH": 19,
+    "ROMANIAN": 20,
+    "RUSSIAN": 21,
+    "SERBIAN": 22,
+    "SLOVAKIAN": 23,
+    "SPANISH": 24,
+    "SWEDISH": 25,
+    "TAGALOG": 26,
+    "TURKISH": 27
+}
+
 const LobbyType = {
     "PUBLIC": 0,
     "PRIVATE": 1
@@ -128,6 +159,7 @@ const ReportReasons = {
 
 module.exports = {
     Packets,
+    Language,
     LobbyType,
     LeaveReason,
     JoinError,

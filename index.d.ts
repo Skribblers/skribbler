@@ -34,6 +34,37 @@ declare module "skribbler" {
 		UPDATE_NAME = 90
 	}
 
+	export enum Language {
+		ENGLISH = 0,
+		GERMAN,
+		BULGARIAN,
+		CZECH,
+		DANISH,
+		DUTCH,
+		FINNISH,
+		FRENCH,
+		ESTONIAN,
+		GREEK,
+		HEBREW,
+		HUNGARIAN,
+		ITALIAN,
+		JAPANESE,
+		KOREAN,
+		LATVIAN,
+		MACEDONIAN,
+		NORWEGIAN,
+		PORTUGUESE,
+		POLISH,
+		ROMANIAN,
+		RUSSIAN,
+		SERBIAN,
+		SLOVAKIAN,
+		SPANISH,
+		SWEDISH,
+		TAGALOG,
+		TURKISH
+	}
+
 	export enum LobbyType {
 		PUBLIC = 0,
 		PRIVATE
@@ -96,7 +127,7 @@ declare module "skribbler" {
 		avatar?: Array<Number>
 		lobbyCode?: String
 		createPrivateRoom?: Boolean
-		language?: Number | String
+		language?: Language
 		serverURL?: String
 		httpHeaders?: Object
 		socketOptions?: Object
@@ -112,7 +143,7 @@ declare module "skribbler" {
 	}
 
 	export interface LobbySettings {
-		language?: Number
+		language?: Language
 		maxPlayers?: Number
 		maxDrawTime?: Number
 		maxRounds?: Number

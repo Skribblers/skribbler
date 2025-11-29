@@ -4,7 +4,7 @@ const { ClientPlayer } = require("./ClientPlayer.js");
 const { Canvas } = require("./Canvas.js");
 const { joinLobby } = require("../auth.js");
 
-const { Packets, GameState, Vote } = require("../constants.js");
+const { Packets, Language, GameState, Vote } = require("../constants.js");
 
 class Client extends events {
 	/**
@@ -27,7 +27,7 @@ class Client extends events {
 		if(options.createPrivateRoom && options.lobbyCode) throw Error("Cannot create a private room with a lobby code.");
 		
 		options.httpHeaders ??= {};
-		options.language ??= 0;
+		options.language ??= Language.ENGLISH;
 		options.avatar ??= [
 			Math.floor(Math.random() * 26),
 			Math.floor(Math.random() * 57),
