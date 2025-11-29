@@ -12,22 +12,17 @@ const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
 async function getServerUri(options = {}) {
-	if(options.serverURL) return options.serverURL;
-
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
-	// @ts-expect-error
 	const request = await fetch("https://skribbl.io/api/play", {
 		method: "POST",
 		headers: {
-			"Host": "skribbl.io",
 			"User-Agent": userAgent,
 			"Accept": "*/*",
 			"Accept-Language": "en-US",
 			"Accept-Encoding": "gzip, deflate, br",
 			"Content-type": "application/x-www-form-urlencoded",
-			"Content-Length": body.length,
 			"Origin": "https://skribbl.io",
 			"Connection": "keep-alive",
 			"Referer": "https://skribbl.io/",
@@ -40,14 +35,13 @@ async function getServerUri(options = {}) {
 	if(request.status === 503) throw Error("Unable to get server URI. Either you are creating too many clients or skribbl.io is down.");
 
 	const serverURI = await request.text();
-
 	return serverURI;
 }
 
 /**
  * @param {Object} [options] - Options the client should use
  * @param {String} [options.name] - The username the bot should join with
- * @param {Array} [options.avatar] - The avatar the bot should join with
+ * @param {Array<Number>} [options.avatar] - The avatar the bot should join with
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
@@ -59,9 +53,8 @@ async function joinLobby(options = {}) {
 	const serverURI = await getServerUri(options);
 
 	// Start websocket connection
-	const socket = await io(serverURI, {
+	const socket = io(serverURI, {
 		extraHeaders: {
-			"Host": serverURI.replace("https://", ""),
 			"User-Agent": userAgent,
 			"Accept": "*/*",
 			"Accept-Language": "en-US",

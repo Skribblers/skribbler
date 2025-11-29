@@ -62,7 +62,9 @@ class Proxy extends events {
 				};
 
 				// Connect to server URI provided in Proxy options or the skribbl.io servers
-				const server = clientIo(await getServerUri(options));
+				const serverUrl = options.serverUrl ?? await getServerUri(options);
+
+				const server = clientIo(serverUrl);
 
 				server.on("connect", () => {
 					server.emit("login", loginData);
