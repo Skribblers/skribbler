@@ -32,7 +32,7 @@ client.on("stateUpdate", (data) => {
 		}
 
 		// Once the bot can draw, it will draw random stuff and then undo it
-		case GameState.CAN_DRAW: {
+		case GameState.START_DRAW: {
 			if(!client.canvas.canDraw) break;
 
 			console.log("Drawing... now!");

@@ -303,7 +303,7 @@ class Client extends events {
 							break;
 						}
 
-						case GameState.CAN_DRAW: {
+						case GameState.START_DRAW: {
 							if(typeof data.data !== "object") return console.log(`Received invalid packet. ID: 11`);
 
 							this.canvas.drawCommands = [];

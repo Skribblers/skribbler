@@ -55,7 +55,7 @@ const GameState = {
     "GAME_STARTING_SOON": 1,
     "CURRENT_ROUND": 2,
     "USER_PICKING_WORD": 3,
-    "CAN_DRAW": 4,
+    "START_DRAW": 4,
     "DRAW_RESULTS": 5,
     "GAME_RESULTS": 6,
     "IN_GAME_WAITING_ROOM": 7
