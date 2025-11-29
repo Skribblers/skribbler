@@ -586,7 +586,9 @@ class Client extends events {
 	 * @param {String | Number} val - What the value of the setting should be
 	 * @throws
 	 */
-	updateRoomSettings(settingId, val) {
+	updateSetting(settingId, val) {
+		if(this.userId !== this.ownerId) throw Error("Client#updateSetting can only be used if you're the host");
+
 		if(typeof settingId !== "string" && typeof settingId !== "number") throw TypeError("Expected settingId to be type of String or Number");
 		if(typeof val !== "string" && typeof settingId !== "number") throw TypeError("Expected val to be type of String or Number");
 
@@ -667,6 +669,8 @@ class Client extends events {
 	 * @throws
 	 */
 	async startGame(customWords = []) {
+		if(this.userId !== this.ownerId) throw Error("Client#startGame can only be used if you're the host");
+
 		if(!Array.isArray(customWords)) throw TypeError("Expected customWords to be an array");
 
 		this.sendPacket(Packets.REQUEST_GAME_START, customWords.join(", "));
@@ -691,6 +695,8 @@ class Client extends events {
 	 * @throws
 	 */
 	endGame() {
+		if(this.userId !== this.ownerId) throw Error("Client#endGame can only be used if you're the host");
+
 		this.sendPacket(Packets.END_GAME);
 	}
 

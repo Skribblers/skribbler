@@ -70,7 +70,7 @@ declare module "skribbler" {
 		init(): void
 		sendPacket(id: Number, data?: any): void
 		vote(voteType: Vote): void
-		updateRoomSettings(settingId: String, val: String): void
+		updateSetting(settingId: String, val: String): void
 		draw(data: Array<Array<Number>>): void
 		clearCanvas(): void
 		undo(id?: Number): void
