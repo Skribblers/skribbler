@@ -13,8 +13,6 @@ class Proxy extends events {
 	 * @class
 	 * @param {Object} [options] - Options the client should use
 	 * @param {Number} [options.port] - The port to start the proxy on
-	 * @param {String} [options.lobbyCode] - The lobby code to join with
-	 * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
 	 * @param {string} [options.serverUrl] - The server to log into. This can be used with a custom Server
 	 * @param {Object} [options.httpHeaders] - HTTP headers to use
 	 * @throws
@@ -55,22 +53,22 @@ class Proxy extends events {
 				if(loggedIn) return;
 				loggedIn = true;
 
-				// @ts-expect-error
-				this.options.lobbyCode = loginData.join;
-
 				// Connect to server URI provided in Proxy options or the skribbl.io servers
 				// @ts-expect-error
 				let serverUrl = this.options.serverUrl;
 				let path;
 
 				if(!serverUrl) {
-					const { hostname, port } = await getServerUri(this.options);
+					const { hostname, port } = await getServerUri({
+						language: loginData.langauge,
+						lobbyCode: loginData.join,
+
+						...this.options
+					});
 
 					serverUrl = hostname;
 					path = port;
 				}
-
-				console.log(serverUrl);
 
 				const server = clientIo(serverUrl, {
 					// @ts-expect-error

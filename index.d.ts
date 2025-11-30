@@ -273,8 +273,6 @@ declare module "skribbler" {
 
 	export class ProxyOptions {
 		port?: Number
-		lobbyCode?: String
-		language?: Number | String
 		serverUrl?: String
 		httpHeaders?: Object
 	}
