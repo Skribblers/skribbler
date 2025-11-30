@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { Client, Proxy } = require("./index.js");
+const { Client, Proxy, Packets } = require("./index.js");
 
 const random1 = crypto.randomBytes(16).toString("hex");
 const random2 = crypto.randomBytes(16).toString("hex");
@@ -9,14 +9,16 @@ const proxy = new Proxy({
 });
 
 proxy.on("playerJoin", (player) => {
+	console.log("Client joined the skribbl Proxy");
+
 	player.on("outgoing", (name, args) => {
-		if(args.id === 30) args.data += random2;
+		if(args.id === Packets.TEXT) args.data += random2;
 	});
 });
 
 const client = new Client({
 	name: "Skribbler",
-	serverURL: "http://localhost:5732"
+	serverUrl: "http://localhost:5732"
 });
 
 client.on("connect", () => {

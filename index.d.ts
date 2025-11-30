@@ -170,7 +170,7 @@ declare module "skribbler" {
 		lobbyCode?: String
 		createPrivateRoom?: Boolean
 		language?: Language
-		serverURL?: String
+		serverUrl?: String
 		httpHeaders?: Object
 		socketOptions?: Object
 	}

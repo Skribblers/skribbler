@@ -55,19 +55,27 @@ class Proxy extends events {
 				if(loggedIn) return;
 				loggedIn = true;
 
-				// If the Proxy options does not contain any HTTP headers then we use the headers the client sends to our socket.io server
-				const options = {
-					httpHeaders: socket.handshake.headers,
-					lobbyCode: loginData.join,
-					serverUrl: "",
-
-					...this.options
-				};
+				// @ts-expect-error
+				this.options.lobbyCode = loginData.join;
 
 				// Connect to server URI provided in Proxy options or the skribbl.io servers
-				const serverUrl = options.serverUrl ?? await getServerUri(options);
+				// @ts-expect-error
+				let serverUrl = this.options.serverUrl;
+				let path;
 
-				const server = clientIo(serverUrl);
+				if(!serverUrl) {
+					const { hostname, port } = await getServerUri(this.options);
+
+					serverUrl = hostname;
+					path = port;
+				}
+
+				console.log(serverUrl);
+
+				const server = clientIo(serverUrl, {
+					// @ts-expect-error
+					path: this.options.serverUrl ? undefined : ("/" + path),
+				});
 
 				server.on("connect", () => {
 					server.emit("login", loginData);
@@ -79,6 +87,7 @@ class Proxy extends events {
 			});
 		});
 
+		// @ts-expect-error
 		const port = this.options.port ?? 3000;
 
 		server.listen(port, () => {

@@ -51,13 +51,22 @@ async function getServerUri(options = {}) {
  * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
  * @param {Object} [options.httpHeaders] - HTTP headers to use
+ * @param {String} [options.serverUrl] - A custom server URL to connect to
  * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */
 async function joinLobby(options = {}) {
-	const { hostname, port } = await getServerUri(options);
+	let serverUrl = options.serverUrl;
+	let path;
+
+	if(!serverUrl) {
+		const { hostname, port } = await getServerUri(options);
+
+		serverUrl = hostname;
+		path = port;
+	}
 
 	// Start websocket connection
-	const socket = io(hostname, {
+	const socket = io(serverUrl, {
 		// @ts-expect-error
 		extraHeaders: {
 			"User-Agent": userAgent,
@@ -72,7 +81,7 @@ async function joinLobby(options = {}) {
 		},
 		reconnection: false,
 		transports: ["websocket", "polling"],
-		path: "/" + port,
+		path: options.serverUrl ? undefined : ("/" + path),
 
 		...options.socketOptions
 	});
