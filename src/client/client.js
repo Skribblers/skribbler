@@ -152,8 +152,7 @@ class Client extends events {
 					// Get the player that voted to kick, and who they voted for
 					const voter = this.players.find(plr => plr.id === data[0]);
 					const votee = this.players.find(plr => plr.id === data[1]);
-					if(!voter) break;
-					if(!votee) break;
+					if(!voter || !votee) break;
 
 					this.emit("votekick", {
 						voter,
@@ -421,8 +420,12 @@ class Client extends events {
 						if(!Array.isArray(hint)) continue;
 
 						/**
+						 * HintData is a nested array that correlates a character position to a character,
+						 * 
 						 * hint[0] is the position of the word where the letter belongs
 						 * hint[1] is the letter
+						 * 
+						 * If the hintdata were to be [[4,'a']], then that would mean the fourth position of the word is the letter 'a'
 						 */
 						characters[hint[0]] = hint[1];
 					}
@@ -452,7 +455,7 @@ class Client extends events {
 
 					this.emit("playerGuessed", {
 						player,
-						// Can be undefined
+						// If the player who guessed is not the current client then the following field will be undefined
 						word: data.word
 					});
 					break;
@@ -473,9 +476,7 @@ class Client extends events {
 
 					this.ownerId = data;
 
-					this.emit("newOwner", {
-						player
-					});
+					this.emit("newOwner", { player });
 					break;
 				}
 
@@ -545,7 +546,7 @@ class Client extends events {
 					this.emit(id, data);
 			}
 
-			this.emit("packet", {id, data});
+			this.emit("packet", { id, data });
 		});
 
 		const interval = setInterval(() => {
@@ -614,16 +615,12 @@ class Client extends events {
 	selectWord(word) {
 		if(typeof word !== "number" && typeof word !== "string") throw TypeError("Expected word to be type of Number or String");
 
-		if(typeof word === "string") {
-			for(let i = 0; i < this.availableWords.length + 1; i++) {
-				if(this.availableWords[i] === word) {
-					word = i;
-					break;
-				}
-			}
-		}
+		// The SelectWord packet takes in an index id of the list of words sent in state 3, which the client stores in this.availableWords
+		// If the function recieves a word as a string, we get the word's index in the availableWords array, otherwise we use the index passed in to the function
+		const index = typeof word === "string" ? this.availableWords.findIndex(w => w === word) : word;
+		if(index === -1) throw Error(`Word '${word}' does not appear in the available words list`);
 
-		this.sendPacket(Packets.SELECT_WORD, word);
+		this.sendPacket(Packets.SELECT_WORD, index);
 	}
 
 	/**

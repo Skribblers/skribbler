@@ -36,7 +36,6 @@ class Proxy extends events {
 		this.didInit = true;
 
 		const app = require("express")();
-		// @ts-expect-error
 		const server = http.createServer(app);
 
 		const io = new Server(server, {
@@ -49,7 +48,7 @@ class Proxy extends events {
 		io.on("connection", (socket) => {
 			let loggedIn = false;
 			socket.on("login", async (loginData) => {
-				// This is to make sure the login packet cannot be spammed in the same socket connection
+				// Make sure the login packet cannot be spammed in the same socket connection
 				if(loggedIn) return;
 				loggedIn = true;
 
