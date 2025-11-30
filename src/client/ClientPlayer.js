@@ -36,7 +36,7 @@ class ClientPlayer {
     }
 
     get isDrawer() {
-        return this.id === this.client.currentDrawer?.id;
+        return this.id === this.client.drawerId;
     }
 
     get isAdmin() {

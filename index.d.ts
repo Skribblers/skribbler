@@ -208,14 +208,14 @@ declare module "skribbler" {
 		state?: Number
 		round: Number
 
-		userId?: Number
-		ownerId?: Number
+		userId: Number | null
+		ownerId: Number | null
+		drawerId: Number | null
 
 		lobbyType?: LobbyType
 
 		players: Array<ClientPlayer>
 		time: Number
-		currentDrawer: ClientPlayer | null
 		availableWords: Array<String>
 		canvas: Canvas
 		word: String

@@ -56,6 +56,7 @@ class Client extends events {
 	 * @type {Number | null}
 	 */
 	ownerId = null;
+	drawerId = null;
 
 	lobbyType = null;
 
@@ -64,10 +65,6 @@ class Client extends events {
 	 */
 	players = [];
 	time = 0;
-	/**
-	 * @type {ClientPlayer | null}
-	 */
-	currentDrawer = null;
 	/**
 	 * @type {Array<String>}
 	 */
@@ -219,7 +216,7 @@ class Client extends events {
 					this.players = data.users;
 
 					this.time = data.state?.time;
-					this.currentDrawer = this.players.find(plr => plr.id === data.state?.data?.id) ?? null;
+					this.drawerId = data.state?.data?.id;
 					this.canvas.drawCommands = data.state?.data?.drawCommands ?? [];
 
 					if(Array.isArray(data.state?.data?.word)) {
@@ -291,12 +288,11 @@ class Client extends events {
 
 							this.word = "";
 
-							this.currentDrawer = this.players.find(plr => plr.id === data.data.id) ?? null;
+							this.drawerId = data.data.id
 							this.availableWords = data.data.words;
 
 							this.emit("stateUpdate", {
 								state: data.id,
-								drawer: this.currentDrawer,
 								// The following field will be undefined if the Client is not the one who will be drawing
 								words: this.availableWords
 							});
@@ -308,7 +304,7 @@ class Client extends events {
 
 							this.canvas.drawCommands = [];
 							this.availableWords = [];
-							this.currentDrawer = this.players.find(plr => plr.id === data.data?.id) ?? null;
+							this.drawerId = data.data?.id
 
 							if(Array.isArray(data.data.word)) {
 								for(const length of data.data.word) {
@@ -322,7 +318,6 @@ class Client extends events {
 
 							this.emit("stateUpdate", {
 								state: data.id,
-								drawer: this.currentDrawer,
 								word: this.word
 							});
 							break;
