@@ -4,6 +4,7 @@ const { ClientPlayer } = require("./ClientPlayer.js");
 const { Canvas } = require("./Canvas.js");
 const { joinLobby } = require("../auth.js");
 
+// eslint-disable-next-line no-unused-vars
 const { Packets, Language, GameState, Vote } = require("../constants.js");
 
 class Client extends events {
