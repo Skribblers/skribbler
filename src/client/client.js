@@ -51,11 +51,17 @@ class Client extends events {
 	state = null;
 	round = 0;
 
+	/**
+	 * @type {Number | null}
+	 */
 	userId = null;
 	/**
 	 * @type {Number | null}
 	 */
 	ownerId = null;
+	/**
+	 * @type {Number | null}
+	 */
 	drawerId = null;
 
 	lobbyType = null;
@@ -266,8 +272,8 @@ class Client extends events {
 						case GameState.CURRENT_ROUND: {
 							if(typeof data.data !== "number") return console.log(`Received invalid packet. ID: 11`);
 
-							// @ts-ignore
 							this.round = data.data + 1;
+							this.drawerId = null;
 
 							// Scores are reset
 							if(this.round === 1) {
@@ -352,6 +358,8 @@ class Client extends events {
 
 						case GameState.GAME_RESULTS: {
 							if(!Array.isArray(data.data)) return console.log(`Received invalid packet. ID: 11`);
+
+							this.drawerId = null;
 							this.word = "";
 
 							const leaderboard = [];
@@ -553,6 +561,18 @@ class Client extends events {
 
 	get isHost() {
 		return this.userId === this.ownerId
+	}
+
+	get user() {
+		return this.players.find(plr => plr.id === this.userId) ?? null;
+	}
+
+	get owner() {
+		return this.players.find(plr => plr.id === this.ownerId) ?? null;
+	}
+
+	get drawer() {
+		return this.players.find(plr => plr.id === this.drawerId) ?? null;
 	}
 
 	/**

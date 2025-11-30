@@ -222,6 +222,9 @@ declare module "skribbler" {
 
 		// Getter values
 		readonly isHost: Boolean
+		readonly user: ClientPlayer | null
+		readonly owner: ClientPlayer | null
+		readonly drawer: ClientPlayer | null
 
 		init(): void
 		sendPacket(id: Number, data?: any): void
