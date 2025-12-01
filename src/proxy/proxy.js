@@ -35,8 +35,7 @@ class Proxy extends events {
 
 		this.didInit = true;
 
-		const app = require("express")();
-		const server = http.createServer(app);
+		const server = http.createServer();
 
 		const io = new Server(server, {
 			cors: {
