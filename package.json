@@ -4,7 +4,7 @@
   "description": "A headless client that can join Skribbl.io lobbies",
   "main": "index.js",
   "scripts": {
-    "test": "eslint && node test.js"
+    "test": "eslint && node ./tests/test.js"
   },
   "repository": {
     "type": "git",
