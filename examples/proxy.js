@@ -22,7 +22,7 @@ proxy.on("playerJoin", (player) => {
 		if(args.id === Packets.TEXT) args.data = "I didnt say this.";
 
 		// Player is always alerted of spaming
-		player.sendOutbound(Packets.SPAM_DETECTED);
+		player.sendInbound(Packets.SPAM_DETECTED);
 	});
 
 	player.on("disconnect", () => {
