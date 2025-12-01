@@ -11,7 +11,7 @@ class ReportBuilder {
         if(bool) {
             this.bitfield |= ReportReasons.INAPPROPRIATE_BEHAVIOR;
         } else {
-            this.bitfield ^= ReportReasons.INAPPROPRIATE_BEHAVIOR;
+            this.bitfield &= ~ReportReasons.INAPPROPRIATE_BEHAVIOR;
         }
     }
 
@@ -23,7 +23,7 @@ class ReportBuilder {
         if(bool) {
             this.bitfield |= ReportReasons.SPAM;
         } else {
-            this.bitfield ^= ReportReasons.SPAM;
+            this.bitfield &= ~ReportReasons.SPAM;
         }
     }
 
@@ -35,7 +35,7 @@ class ReportBuilder {
         if(bool) {
             this.bitfield |= ReportReasons.CHEATING;
         } else {
-            this.bitfield ^= ReportReasons.CHEATING;
+            this.bitfield &= ~ReportReasons.CHEATING;
         }
     }
 
