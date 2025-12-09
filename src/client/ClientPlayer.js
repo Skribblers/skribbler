@@ -7,7 +7,7 @@ class ClientPlayer {
 
     id = 0;
     name = "";
-    
+
     /**
      * @type {Array<Number>}
      */

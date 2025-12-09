@@ -26,7 +26,7 @@ class Client extends events {
 
 		if(typeof options !== "object") throw TypeError("Client options is not an object.");
 		if(options.createPrivateRoom && options.lobbyCode) throw Error("Cannot create a private room with a lobby code.");
-		
+
 		options.httpHeaders ??= {};
 		options.language ??= Language.ENGLISH;
 		options.avatar ??= [
@@ -46,6 +46,8 @@ class Client extends events {
 	connected = false;
 
 	lobbyId = null;
+	lobbyType = null;
+
 	settings = {};
 
 	state = null;
@@ -63,8 +65,6 @@ class Client extends events {
 	 * @type {Number | null}
 	 */
 	drawerId = null;
-
-	lobbyType = null;
 
 	/**
 	 * @type {ClientPlayer[]}
@@ -200,6 +200,8 @@ class Client extends events {
 					) return console.log(`Received invalid packet. ID: 10.`);
 
 					this.lobbyId = data.id;
+					this.lobbyType = data.type;
+
 					this.settings = {
 						language: data.settings[0],
 						maxPlayers: data.settings[1],
@@ -217,33 +219,21 @@ class Client extends events {
 					this.userId = data.me;
 					this.ownerId = data.owner;
 
-					this.lobbyType = data.type;
-
 					this.players = data.users.map((/** @type {Object} */ player) => new ClientPlayer(player, this));
 
 					this.time = data.state?.time;
 					this.drawerId = data.state?.data?.id;
 					this.canvas.drawCommands = data.state?.data?.drawCommands ?? [];
 
-					if(Array.isArray(data.state?.data?.word)) {
-						for(const length of data.state.data.word) {
-							this.word += `${"_".repeat(length)} `;
-						}
+					// Get the sum of all the word lengths, and add the amount of spaces in-between words
+					const words = data.state?.data?.word;
+					const totalLength = words?.reduce((/** @type {Number} */ a, /** @type {Number} */ b) => a + b, 0) + words?.length - 1;
 
-						this.word = this.word.trim();
-					}
+					// If WordMode is set to Hidden, then data.data.words will be an empty array
+					// When this happens, we replicate the vanilla game's behavior and set the current word to three question marks
+					this.word = totalLength > 0 ? "_".repeat(totalLength) : "???";
 
-					if(Array.isArray(data.state?.data?.hints)) {
-						const characters = this.word.split("");
-
-						for(const hint of data.state.data.hints) {
-							if(!Array.isArray(hint)) continue;
-
-							characters[hint[0]] = hint[1];
-						}
-
-						this.word = characters.join("");
-					}
+					this._handleHints(data.state?.data?.hints);
 
 					this.emit("connect");
 					break;
@@ -308,16 +298,20 @@ class Client extends events {
 						case GameState.START_DRAW: {
 							if(typeof data.data !== "object") return console.log(`Received invalid packet. ID: 11`);
 
-							this.canvas.drawCommands = [];
 							this.availableWords = [];
-							this.drawerId = data.data?.id
+							this.canvas.drawCommands = [];
+							this.drawerId = data.data.id
 
-							if(Array.isArray(data.data.word)) {
-								for(const length of data.data.word) {
-									this.word += `${"_".repeat(length)} `;
-								}
+							if(!this.canvas.canDraw) {
+								// Get the sum of all the word lengths, and add the amount of spaces in-between words
+								const totalLength = data.data.word?.reduce((/** @type {Number} */ a, /** @type {Number} */ b) => a + b, 0) + data.data.word?.length - 1;
 
-								this.word = this.word.trim();
+								// If WordMode is set to Hidden, then data.data.words will be an empty array
+								// When this happens, we replicate the vanilla game's behavior and set the current word to three question marks
+								this.word = totalLength > 0 ? "_".repeat(totalLength) : "???";
+
+								// If there are any spaces or plus symbols to seperate words, then the server will include it in the hint data
+								this._handleHints(data.data.hints);
 							} else {
 								this.word = data.data.word;
 							}
@@ -418,22 +412,7 @@ class Client extends events {
 				case Packets.REVEAL_HINT: {
 					if(!Array.isArray(data)) return console.log(`Received invalid packet. ID: 13.`);
 
-					const characters = this.word.split("");
-					for(const hint of data) {
-						if(!Array.isArray(hint)) continue;
-
-						/**
-						 * HintData is a nested array that correlates a character position to a character,
-						 * 
-						 * hint[0] is the position of the word where the letter belongs
-						 * hint[1] is the letter
-						 * 
-						 * If the hintdata were to be [[4,'a']], then that would mean the fourth position of the word is the letter 'a'
-						 */
-						characters[hint[0]] = hint[1];
-					}
-
-					this.word = characters.join("");
+					this._handleHints(data);
 
 					this.emit("hintRevealed", data);
 					break;
@@ -559,18 +538,67 @@ class Client extends events {
 		}, 1000);
 	}
 
+	/**
+	 * @param {any[]} hintData
+	 */
+	_handleHints(hintData) {
+		if(!Array.isArray(hintData)) return;
+
+		const characters = this.word.split("");
+
+		for(const hint of hintData) {
+			if(!Array.isArray(hint)) continue;
+
+			/**
+			 * HintData is a nested array that correlates a character position to a character,
+			 *
+			 * hint[0] is the position of the word where the letter belongs
+			 * hint[1] is the letter
+			 *
+			 * If the hintdata were to be [[4,'a']], then that would mean the fourth position of the word is the letter 'a'
+			 */
+			characters[hint[0]] = hint[1];
+		}
+
+		this.word = characters.join("");
+	}
+
+	/**
+	 * @name isHost
+	 * @description Return whether the current client is the host of the lobby
+	 * @returns {Boolean}
+	 * @readonly
+	 */
 	get isHost() {
 		return this.userId === this.ownerId
 	}
 
+	/**
+	 * @name user
+	 * @description Return the current client's instance of ClientPlayer
+	 * @returns {ClientPlayer | null}
+	 * @readonly
+	 */
 	get user() {
 		return this.players.find(plr => plr.id === this.userId) ?? null;
 	}
 
+	/**
+	 * @name owner
+	 * @description Return the lobby owner's instance of ClientPlayer
+	 * @returns {ClientPlayer | null}
+	 * @readonly
+	 */
 	get owner() {
 		return this.players.find(plr => plr.id === this.ownerId) ?? null;
 	}
 
+	/**
+	 * @name drawer
+	 * @description Return the drawer's instance of ClientPlayer
+	 * @returns {ClientPlayer | null}
+	 * @readonly
+	 */
 	get drawer() {
 		return this.players.find(plr => plr.id === this.drawerId) ?? null;
 	}

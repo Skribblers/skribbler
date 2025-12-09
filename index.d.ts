@@ -203,6 +203,8 @@ declare module "skribbler" {
 		connected: Boolean
 
 		lobbyId?: String
+		lobbyType?: LobbyType
+
 		settings: LobbySettings
 
 		state?: Number
@@ -211,8 +213,6 @@ declare module "skribbler" {
 		userId: Number | null
 		ownerId: Number | null
 		drawerId: Number | null
-
-		lobbyType?: LobbyType
 
 		players: Array<ClientPlayer>
 		time: Number
