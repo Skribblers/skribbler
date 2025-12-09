@@ -219,7 +219,7 @@ class Client extends events {
 
 					this.lobbyType = data.type;
 
-					this.players = data.users;
+					this.players = data.users.map((/** @type {Object} */ player) => new ClientPlayer(player, this));
 
 					this.time = data.state?.time;
 					this.drawerId = data.state?.data?.id;

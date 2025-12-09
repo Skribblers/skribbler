@@ -24,9 +24,9 @@ class ClientPlayer {
         this.id = player.id;
         this.name = player.name;
         this.avatar = player.avatar;
-        this.score = player.score;
-        this.guessed = player.guessed;
-        this.flags = player.flags;
+        this.score = player.score ?? 0;
+        this.guessed = player.guessed ?? false;
+        this.flags = player.flags ?? 0;
 
         this.client = client;
     }
