@@ -484,7 +484,7 @@ class Client extends events {
 				case Packets.UNDO: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 21.`);
 
-					this.canvas.drawCommands.splice(data, 1);
+					this.canvas.drawCommands.splice(data);
 
 					this.emit("undo", data);
 					break;
