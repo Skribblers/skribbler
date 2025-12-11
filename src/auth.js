@@ -2,32 +2,26 @@
 const fetch = require("node-fetch");
 const { io } = require("socket.io-client");
 
-const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
 
 /**
  * @param {Object} [options] - Options the client should use
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
- * @param {string} [options.serverURL] - The server to log into. This can be used in combination with a Proxy or a custom Server
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
 async function getServerUri(options = {}) {
-	if(options.serverURL) return options.serverURL;
-
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
-	// @ts-expect-error
 	const request = await fetch("https://skribbl.io/api/play", {
 		method: "POST",
 		headers: {
-			"Host": "skribbl.io",
 			"User-Agent": userAgent,
 			"Accept": "*/*",
 			"Accept-Language": "en-US",
 			"Accept-Encoding": "gzip, deflate, br",
 			"Content-type": "application/x-www-form-urlencoded",
-			"Content-Length": body.length,
 			"Origin": "https://skribbl.io",
 			"Connection": "keep-alive",
 			"Referer": "https://skribbl.io/",
@@ -37,31 +31,44 @@ async function getServerUri(options = {}) {
 		body: body
 	});
 
-	if(request.status === 503) throw Error("Unable to get server URI. Either you are creating too many clients or skribbl.io is down.");
+	if(request.status === 503) throw Error("Unable to get server URI; either you are creating too many clients or skribbl.io is down");
 
-	const serverURI = await request.text();
+	const serverUrl = await request.text();
 
-	return serverURI;
+	const url = new URL(serverUrl);
+
+	return {
+		hostname: url.protocol + "//" + url.hostname,
+		port: url.port
+	};
 }
 
 /**
  * @param {Object} [options] - Options the client should use
  * @param {String} [options.name] - The username the bot should join with
- * @param {Array} [options.avatar] - The avatar the bot should join with
+ * @param {Array<Number>} [options.avatar] - The avatar the bot should join with
  * @param {String} [options.lobbyCode] - The lobby code to join with
  * @param {Boolean} [options.createPrivateRoom] - If a private room should be created. Not supported with the lobbyCode option.
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
- * @param {string} [options.serverURL] - The server to log into. This can be used in combination with a Proxy or a custom Server
  * @param {Object} [options.httpHeaders] - HTTP headers to use
+ * @param {String} [options.serverUrl] - A custom server URL to connect to
  * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */
 async function joinLobby(options = {}) {
-	const serverURI = await getServerUri(options);
+	let serverUrl = options.serverUrl;
+	let path;
+
+	if(!serverUrl) {
+		const { hostname, port } = await getServerUri(options);
+
+		serverUrl = hostname;
+		path = port;
+	}
 
 	// Start websocket connection
-	const socket = await io(serverURI, {
+	const socket = io(serverUrl, {
+		// @ts-expect-error
 		extraHeaders: {
-			"Host": serverURI.replace("https://", ""),
 			"User-Agent": userAgent,
 			"Accept": "*/*",
 			"Accept-Language": "en-US",
@@ -74,6 +81,7 @@ async function joinLobby(options = {}) {
 		},
 		reconnection: false,
 		transports: ["websocket", "polling"],
+		path: options.serverUrl ? undefined : ("/" + path),
 
 		...options.socketOptions
 	});

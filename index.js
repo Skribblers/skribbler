@@ -1,10 +1,17 @@
 // @ts-check
-const { Client } = require("./src/client.js");
-const { Proxy } = require("./src/proxy.js");
+const { Client, ClientPlayer } = require("./src/client/client.js");
+const { Proxy, ProxyPlayer } = require("./src/proxy/proxy.js");
+const { DrawBuilder } = require("./src/builders/DrawBuilder.js");
+const { ReportBuilder } = require("./src/builders/ReportBuilder.js");
 const Constants = require("./src/constants.js");
 
 module.exports = {
 	Client,
+	ClientPlayer,
 	Proxy,
-	Constants
+	ProxyPlayer,
+	DrawBuilder,
+	ReportBuilder,
+
+	...Constants
 };

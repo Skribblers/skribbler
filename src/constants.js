@@ -7,8 +7,9 @@ const Packets = {
     "REPORT": 6,
     "MUTE": 7,
     "VOTE": 8,
+    "UPDATE_AVATAR": 9,
     "LOBBY_DATA": 10,
-    "UPDATE_GAME_DATA": 11,
+    "UPDATE_GAME_STATE": 11,
     "UPDATE_SETTINGS": 12,
     "REVEAL_HINT": 13,
     "UPDATE_TIME": 14,
@@ -19,12 +20,44 @@ const Packets = {
     "DRAW": 19,
     "CLEAR_CANVAS": 20,
     "UNDO": 21,
-    "REQUEST_GAME_START": 22,
+    "START_GAME": 22,
     "END_GAME": 23,
     "TEXT": 30,
     "GAME_START_ERROR": 31,
-    "SPAM_DETECTED": 32
+    "SPAM_DETECTED": 32,
+    "UPDATE_NAME": 90
 };
+
+const Language = {
+    "ENGLISH": 0,
+    "GERMAN": 1,
+    "BULGARIAN": 2,
+    "CZECH": 3,
+    "DANISH": 4,
+    "DUTCH": 5,
+    "FINNISH": 6,
+    "FRENCH": 7,
+    "ESTONIAN": 8,
+    "GREEK": 9,
+    "HEBREW": 10,
+    "HUNGARIAN": 11,
+    "ITALIAN": 12,
+    "JAPANESE": 13,
+    "KOREAN": 14,
+    "LATVIAN": 15,
+    "MACEDONIAN": 16,
+    "NORWEGIAN": 17,
+    "PORTUGUESE": 18,
+    "POLISH": 19,
+    "ROMANIAN": 20,
+    "RUSSIAN": 21,
+    "SERBIAN": 22,
+    "SLOVAKIAN": 23,
+    "SPANISH": 24,
+    "SWEDISH": 25,
+    "TAGALOG": 26,
+    "TURKISH": 27
+}
 
 const LobbyType = {
     "PUBLIC": 0,
@@ -53,7 +86,7 @@ const GameState = {
     "GAME_STARTING_SOON": 1,
     "CURRENT_ROUND": 2,
     "USER_PICKING_WORD": 3,
-    "CAN_DRAW": 4,
+    "START_DRAW": 4,
     "DRAW_RESULTS": 5,
     "GAME_RESULTS": 6,
     "IN_GAME_WAITING_ROOM": 7
@@ -109,8 +142,66 @@ const SettingsMaxValue = {
     7: 1
 };
 
+const UserFlags = {
+    "ADMIN": 4
+};
+
+const Vote = {
+    "DISLIKE": 0,
+    "LIKE": 1
+}
+
+const ReportReasons = {
+    "INAPPROPRIATE_BEHAVIOR": 1,
+    "SPAM": 2,
+    "CHEATING": 4
+};
+
+const Tools = {
+    "PENCIL": 0,
+    "FILL": 1
+};
+
+const BrushSize = {
+    "EXTRA_SMALL": 4,
+    "SMALL": 10,
+    "MEDIUM": 20,
+    "LARGE": 32,
+    "EXTRA_LARGE": 40
+};
+
+const Colors = {
+    "WHITE": 0,
+    "BLACK": 1,
+    "GRAY": 2,
+    "DARK_GRAY": 3,
+    "RED": 4,
+    "DARK_RED": 5,
+    "ORANGE": 6,
+    "DARK_ORANGE": 7,
+    "YELLOW": 8,
+    "DARK_YELLOW": 9,
+    "LIME": 10,
+    "DARK_GREEN": 11,
+    "MINT": 12,
+    "DARK_MINT": 13,
+    "CYAN": 14,
+    "DARK_CYAN": 15,
+    "BLUE": 16,
+    "DARK_BLUE": 17,
+    "MAGENTA": 18,
+    "DARK_MAGENTA": 19,
+    "PINK": 20,
+    "DARK_PINK": 21,
+    "PEACH": 22,
+    "DARK_PEACH": 23,
+    "BROWN": 24,
+    "DARK_BROWN": 25
+};
+
 module.exports = {
     Packets,
+    Language,
     LobbyType,
     LeaveReason,
     JoinError,
@@ -120,5 +211,11 @@ module.exports = {
     WordMode,
     Settings,
     SettingsMinValue,
-    SettingsMaxValue
+    SettingsMaxValue,
+    UserFlags,
+    Vote,
+    ReportReasons,
+    Tools,
+    BrushSize,
+    Colors,
 };
