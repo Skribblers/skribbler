@@ -213,7 +213,8 @@ class Client extends events {
 						useCustomWords: data.settings[7] ? true : false
 					};
 
-					this.state = data.state?.id;
+					const state = data.state ?? {};
+					this.state = state.id ?? {};
 					this.round = data.round + 1;
 
 					this.userId = data.me;
@@ -221,19 +222,23 @@ class Client extends events {
 
 					this.players = data.users.map((/** @type {Object} */ player) => new ClientPlayer(player, this));
 
-					this.time = data.state?.time;
-					this.drawerId = data.state?.data?.id;
-					this.canvas.drawCommands = data.state?.data?.drawCommands ?? [];
+					this.time = state.time;
+					this.drawerId = state.data?.id;
+					this.canvas.drawCommands = state.data?.drawCommands ?? [];
 
-					// Get the sum of all the word lengths, and add the amount of spaces in-between words
-					const words = data.state?.data?.word;
-					const totalLength = words?.reduce((/** @type {Number} */ a, /** @type {Number} */ b) => a + b, 0) + words?.length - 1;
+					if(state.id === GameState.START_DRAW) {
+						// Get the sum of all the word lengths, and add the amount of spaces in-between words
+						const words = Array.isArray(state.data?.word) ? state.data.word : [];
+						const totalLength = words.reduce((/** @type {Number} */ a, /** @type {Number} */ b) => a + b, 0) + words.length - 1;
 
-					// If WordMode is set to Hidden, then data.data.words will be an empty array
-					// When this happens, we replicate the vanilla game's behavior and set the current word to three question marks
-					this.word = totalLength > 0 ? "_".repeat(totalLength) : "???";
+						// If WordMode is set to Hidden, then data.data.words will be an empty array
+						// When this happens, we replicate the vanilla game's behavior and set the current word to three question marks
+						this.word = totalLength > 0 ? "_".repeat(totalLength) : "???";
 
-					this._handleHints(data.state?.data?.hints);
+						this._handleHints(state.data?.hints);
+					} else {
+						this.word = "";
+					}
 
 					this.emit("connect");
 					break;
@@ -488,7 +493,7 @@ class Client extends events {
 				case Packets.TEXT: {
 					if(
 						typeof data?.id !== "number" ||
-						typeof data?.msg !== "string"
+						typeof data.msg !== "string"
 					) return console.log(`Received invalid packet. ID: 30.`);
 
 					const player = this.players.find(plr => plr.id === data.id);
