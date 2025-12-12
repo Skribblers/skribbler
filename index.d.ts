@@ -115,6 +115,17 @@ declare module "skribbler" {
 		COMBINATION
 	}
 
+	export enum Settings {
+		LANGUAGE = 0,
+		MAX_PLAYER_COUNT,
+		MAX_DRAW_TIME,
+		MAX_ROUNDS,
+		WORD_COUNT,
+		MAX_HINTS,
+		WORD_MODE,
+		USE_CUSTOM_WORDS_ONLY
+	}
+
 	export enum Vote {
 		DISLIKE = 0,
 		LIKE
