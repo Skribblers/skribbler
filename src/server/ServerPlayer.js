@@ -46,6 +46,14 @@ class ServerPlayer extends events {
         this.socket.emit("reason", reason);
         this.socket.disconnect();
     }
+
+    setAvatar(avatar) {
+        this.lobby.emit(Packets.UPDATE_AVATAR, { id: this.id, avatar })
+    }
+
+    setName(name) {
+        this.lobby.emit(Packets.UPDATE_NAME, { id: this.id, name })
+    }
 }
 
 module.exports = { ServerPlayer };
