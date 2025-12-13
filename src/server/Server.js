@@ -1,7 +1,7 @@
 // @ts-check
 const events = require("events");
 const { Lobby } = require("./Lobby.js");
-const { LobbyType, Settings } = require("../constants.js");
+const { LobbyType, Settings, SettingsMinValue, SettingsMaxValue, Language } = require("../constants.js");
 
 // Web server
 const http = require("http");
@@ -42,7 +42,6 @@ class Server extends events {
 
         io.on("connection", (socket) => this._handleConnection(socket, this));
 
-        console.log(1);
         server.listen(3000, () => {
             console.log(`Started server on http://localhost:3000`);
         });
@@ -62,9 +61,21 @@ class Server extends events {
                 !Array.isArray(data.avatar)
             ) return socket.disconnect();
 
+            // If the login packet has an invalid language then force the language to English
+            const language = Number(data.lang);
+            if(
+                isNaN(language) ||
+                // @ts-expect-error
+                data.lang < SettingsMinValue[Settings.LANGUAGE] ||
+                // @ts-expect-error
+                data.lang > SettingsMaxValue[Settings.LANGUAGE]
+            ) {
+                data.lang = Language.ENGLISH
+            }
+
             // Create a private lobby for the user if requested
             if(data.create === LobbyType.PRIVATE) {
-                const lobby = server.createLobby({ type: LobbyType.PRIVATE });
+                const lobby = server.createLobby({ type: LobbyType.PRIVATE, language });
 
                 lobby._playerJoin(socket, data);
                 return;
@@ -86,7 +97,7 @@ class Server extends events {
             }
 
             // If we were not able to find a lobby then create one
-            if(!foundLobby) foundLobby = server.createLobby({ language: data.lang });
+            if(!foundLobby) foundLobby = server.createLobby({ language });
 
             foundLobby._playerJoin(socket, data);
         });

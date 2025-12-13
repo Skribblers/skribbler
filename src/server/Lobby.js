@@ -34,7 +34,7 @@ class Lobby extends events {
 
         this.server = server;
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
-        this.settings[Settings.LANGUAGE] = Number(options.lang ?? Language.ENGLISH);
+        this.settings[Settings.LANGUAGE] = options.language ?? Language.ENGLISH;
     }
 
     /**
