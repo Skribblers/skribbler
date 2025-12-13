@@ -1,5 +1,5 @@
 const events = require("events");
-const { Packets } = require("../constants.js");
+const { Packets, LeaveReason } = require("../constants.js");
 
 class ServerPlayer extends events {
     constructor({ socket, lobby, player }) {
@@ -45,6 +45,11 @@ class ServerPlayer extends events {
         // Inform the player why they were disconnected
         this.socket.emit("reason", reason);
         this.socket.disconnect();
+
+        // Block the player's IP from rejoining if they should be banned
+        if(reason === LeaveReason.BANNED) {
+            this.lobby.blockedIps.add(this.socket.handshake.address);
+        }
     }
 
     setAvatar(avatar) {

@@ -77,7 +77,8 @@ class Server extends events {
 
                 if(
                     lobby.lobbyType !== LobbyType.PUBLIC ||
-                    lobby.players.size > lobby.settings[Settings.MAX_PLAYER_COUNT]
+                    lobby.players.size >= lobby.settings[Settings.MAX_PLAYER_COUNT] ||
+                    lobby.blockedIps.has(socket.handshake.address)
                 ) continue;
 
                 foundLobby = lobby;

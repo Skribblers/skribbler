@@ -24,6 +24,8 @@ class Lobby extends events {
     // Mappings between a player's session ID to their player ID
     sidMap = new Map();
 
+    blockedIps = new Set();
+
     /**
      * @param {any} options
      */
@@ -98,6 +100,16 @@ class Lobby extends events {
                 if(!player) return;
 
                 player.remove(LeaveReason.KICKED);
+                break;
+            }
+
+            case Packets.HOST_BAN: {
+                if(this.ownerId !== playerId) return;
+
+                const player = this.players.get(packet.data);
+                if(!player) return;
+
+                player.remove(LeaveReason.BANNED);
                 break;
             }
 
@@ -177,7 +189,7 @@ class Lobby extends events {
     }
 
     updateSetting(setting, value) {
-        this[setting] = value;
+        this.settings[setting] = value;
 
         this.emit(Packets.UPDATE_SETTINGS, {
             id: setting,
