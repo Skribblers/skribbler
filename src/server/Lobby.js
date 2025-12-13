@@ -1,13 +1,24 @@
 const events = require("events");
 const crypto = require("crypto");
 const { ServerPlayer } = require("./ServerPlayer.js");
-const { Packets } = require("../constants.js");
+const { Language, Packets, WordMode } = require("../constants.js");
 
 class Lobby extends events {
     id = crypto.randomBytes(8).toString("base64url");
 
     lobbyType = null;
     ownerId = -1;
+
+    settings = {
+        Language: Language.ENGLISH,
+        maxPlayers: 12,
+        maxDrawTime: 90,
+        maxRounds: 3,
+        wordCount: 3,
+        maxHints: 3,
+        wordMode: WordMode.NORMAL,
+        useCustomWords: 0
+    }
 
     players = new Map();
 
@@ -40,7 +51,7 @@ class Lobby extends events {
         this.players.set(player.id, player);
 
         player.sendPacket(Packets.LOBBY_DATA, {
-            settings: [0,0,0,0,0,0,0,0],
+            settings: Object.values(this.settings),
             id: this.id,
             type: this.lobbyType,
             me: player.id,
