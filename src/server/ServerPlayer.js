@@ -14,6 +14,17 @@ class ServerPlayer extends events {
         this.guessed = false;
     }
 
+    get publicInfo() {
+        return {
+            id: this.id,
+            name: this.name,
+            avatar: this.avatar,
+            score: this.score,
+            guessed: this.guessed,
+            flags: 0
+        }
+    }
+
     sendPacket(id, data) {
         this.socket.emit("data", { id, data });
     }

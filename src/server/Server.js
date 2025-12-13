@@ -57,7 +57,7 @@ class Server extends events {
                 !Array.isArray(data.avatar)
             ) return socket.disconnect();
 
-            // Look for a lobby for the player
+            // Create a private lobby for the user if requested
             if(data.create === LobbyType.PRIVATE) {
                 const lobby = server.createLobby({ type: LobbyType.PRIVATE });
 
@@ -65,7 +65,7 @@ class Server extends events {
                 return;
             }
 
-            // Try to find a lobby for the user
+            // Try to find a public lobby for the user
             let foundLobby;
             for(const obj of this.lobbies) {
                 const lobby = obj[1];
@@ -79,7 +79,7 @@ class Server extends events {
                 break;
             }
 
-            // If we were not able to find a lobby for the user, then create one
+            // If we were not able to find a lobby then create one
             if(!foundLobby) foundLobby = server.createLobby({ language: data.lang });
 
             foundLobby._playerJoin(socket, data);

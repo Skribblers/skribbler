@@ -1,7 +1,7 @@
 const events = require("events");
 const crypto = require("crypto");
 const { ServerPlayer } = require("./ServerPlayer.js");
-const { Language, Packets, LobbyType, WordMode } = require("../constants.js");
+const { Language, Packets, LobbyType, GameState, WordMode } = require("../constants.js");
 
 class Lobby extends events {
     id = crypto.randomBytes(8).toString("base64url");
@@ -51,16 +51,22 @@ class Lobby extends events {
 
         this.players.set(player.id, player);
 
+        // Get a list of players to send
+        const players = [];
+        for(const obj of this.players) {
+            players.push(obj[1].publicInfo);
+        }
+
         player.sendPacket(Packets.LOBBY_DATA, {
             settings: Object.values(this.settings),
             id: this.id,
             type: this.lobbyType,
             me: player.id,
             owner: this.ownerId,
-            users: player.publicInfo,
+            users: players,
             round: 0,
             state: {
-                state: 0,
+                id: GameState.IN_GAME_WAITING_ROOM,
                 time: 0,
                 data: 0
             }
