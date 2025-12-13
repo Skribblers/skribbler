@@ -225,7 +225,7 @@ declare module "skribbler" {
 		ownerId: Number | null
 		drawerId: Number | null
 
-		players: Map<Number, ClientPlayer> = Map
+		players: Map<Number, ClientPlayer>
 		time: Number
 		availableWords: Array<String>
 		canvas: Canvas
