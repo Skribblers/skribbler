@@ -27,7 +27,7 @@ class ServerPlayer extends events {
         }
     }
 
-    sendPacket(id, data) {
+    emit(id, data) {
         this.socket.emit("data", { id, data });
     }
 

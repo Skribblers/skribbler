@@ -1,7 +1,7 @@
 // @ts-check
 const events = require("events");
 const { Lobby } = require("./Lobby.js");
-const { LobbyType } = require("../constants.js");
+const { LobbyType, Settings } = require("../constants.js");
 
 // Web server
 const http = require("http");
@@ -77,7 +77,7 @@ class Server extends events {
 
                 if(
                     lobby.lobbyType !== LobbyType.PUBLIC ||
-                    lobby.players.size > lobby.settings.maxPlayers
+                    lobby.players.size > lobby.settings[Settings.MAX_PLAYER_COUNT]
                 ) continue;
 
                 foundLobby = lobby;

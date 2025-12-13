@@ -1,7 +1,7 @@
 const events = require("events");
 const crypto = require("crypto");
 const { ServerPlayer } = require("./ServerPlayer.js");
-const { Language, Packets, LobbyType, GameState, WordMode, LeaveReason } = require("../constants.js");
+const { Language, Packets, LobbyType, GameState, Settings, SettingsMinValue, SettingsMaxValue, WordMode, LeaveReason } = require("../constants.js");
 
 class Lobby extends events {
     id = crypto.randomBytes(8).toString("base64url");
@@ -10,14 +10,14 @@ class Lobby extends events {
     ownerId = -1;
 
     settings = {
-        language: null,
-        maxPlayers: 12,
-        maxDrawTime: 90,
-        maxRounds: 3,
-        wordCount: 3,
-        maxHints: 3,
-        wordMode: WordMode.NORMAL,
-        useCustomWords: 0
+        0: null,
+        1: 12,
+        2: 90,
+        3: 3,
+        4: 3,
+        5: 3,
+        6: WordMode.NORMAL,
+        7: 0
     }
 
     players = new Map();
@@ -32,7 +32,7 @@ class Lobby extends events {
 
         this.server = server;
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
-        this.settings.language = Number(options.lang ?? Language.ENGLISH);
+        this.settings[Settings.LANGUAGE] = Number(options.lang ?? Language.ENGLISH);
     }
 
     /**
@@ -63,7 +63,7 @@ class Lobby extends events {
             players.push(obj[1].publicInfo);
         }
 
-        player.sendPacket(Packets.LOBBY_DATA, {
+        player.emit(Packets.LOBBY_DATA, {
             settings: Object.values(this.settings),
             id: this.id,
             type: this.lobbyType,
@@ -85,26 +85,49 @@ class Lobby extends events {
         socket.on("disconnect", () => this._handleDisconnect(socket));
     }
 
-    _handlePacket(socket, data) {
-        if(typeof data.id !== "number") return;
+    _handlePacket(socket, packet) {
+        if(typeof packet.id !== "number") return;
 
         const playerId = this.sidMap.get(socket.id);
 
-        switch(data.id) {
+        switch(packet.id) {
             case Packets.HOST_KICK: {
                 if(this.ownerId !== playerId) return;
 
-                const player = this.players.get(data.data);
+                const player = this.players.get(packet.data);
                 if(!player) return;
 
                 player.remove(LeaveReason.KICKED);
                 break;
             }
 
-            case Packets.TEXT: {
-                if(typeof data.data !== "string") return;
+            case Packets.UPDATE_SETTINGS: {
+                const settingId = packet.data.id;
+                const settingVal = packet.data.val;
 
-                const msg = data.data.substring(0, 100);
+                // If the packet fails verification, then we resend the proper setting back to the client to avoid the client from having desynced settings
+                const player = this.players.get(playerId);
+                const oldData = { id: settingId, val: this.settings[settingId] };
+
+                if(this.ownerId !== playerId) return player.emit(Packets.UPDATE_SETTINGS, oldData);
+
+                // Make sure the setting is valid
+                if(!Object.hasOwn(this.settings, settingId)) return player.emit(Packets.UPDATE_SETTINGS, oldData);
+
+                // Make sure setting is inside bounds
+                if(
+                    SettingsMinValue[settingId] > settingVal ||
+                    SettingsMaxValue[settingId] < settingVal
+                ) return player.emit(Packets.UPDATE_SETTINGS, oldData);
+
+                this.updateSetting(settingId, settingVal);
+                break;
+            }
+
+            case Packets.TEXT: {
+                if(typeof packet.data !== "string") return;
+
+                const msg = packet.data.substring(0, 100);
 
                 // DEBUGGING FEATURE - REMOVE ON RELEASE
                 if(msg === "sethost") this.setHost(playerId);
@@ -151,6 +174,15 @@ class Lobby extends events {
     // Emit a packet to all online players in the lobby except for the socket
     broadcast(socket, id, data) {
         socket.broadcast.to(this.id).emit("data", {id, data});
+    }
+
+    updateSetting(setting, value) {
+        this[setting] = value;
+
+        this.emit(Packets.UPDATE_SETTINGS, {
+            id: setting,
+            val: value
+        });
     }
 
     setHost(newHostId) {
