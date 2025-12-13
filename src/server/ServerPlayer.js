@@ -53,10 +53,14 @@ class ServerPlayer extends events {
     }
 
     setAvatar(avatar) {
+        this.avatar = avatar;
+
         this.lobby.emit(Packets.UPDATE_AVATAR, { id: this.id, avatar })
     }
 
     setName(name) {
+        this.name = name;
+
         this.lobby.emit(Packets.UPDATE_NAME, { id: this.id, name })
     }
 }
