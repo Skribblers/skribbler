@@ -10,7 +10,7 @@ class Lobby extends events {
     ownerId = -1;
 
     settings = {
-        language: Number(Language.ENGLISH),
+        language: null,
         maxPlayers: 12,
         maxDrawTime: 90,
         maxRounds: 3,
@@ -91,8 +91,23 @@ class Lobby extends events {
         const playerId = this.sidMap.get(socket.id);
 
         switch(data.id) {
+            case Packets.HOST_KICK: {
+                if(this.ownerId !== playerId) return;
+
+                const player = this.players.get(data.data);
+                if(!player) return;
+
+                player.remove(LeaveReason.KICKED);
+                break;
+            }
+
             case Packets.TEXT: {
+                if(typeof data.data !== "string") return;
+
                 const msg = data.data.substring(0, 100);
+
+                // DEBUGGING FEATURE - REMOVE ON RELEASE
+                if(msg === "sethost") this.setHost(playerId);
 
                 this.emit(Packets.TEXT, { id: playerId, msg });
                 break;

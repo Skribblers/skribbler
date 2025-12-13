@@ -1,4 +1,5 @@
 const events = require("events");
+const { Packets } = require("../constants.js");
 
 class ServerPlayer extends events {
     constructor({ socket, lobby, player }) {
@@ -28,6 +29,22 @@ class ServerPlayer extends events {
 
     sendPacket(id, data) {
         this.socket.emit("data", { id, data });
+    }
+
+    remove(reason) {
+        // Announce to all online players about the kick/ban
+        this.lobby.broadcast(this.socket, Packets.PLAYER_LEAVE, {
+            id: this.id,
+            reason: reason
+        });
+
+        // Remove the player from the lobby's player list
+        this.lobby.players.delete(this.id);
+        this.lobby.sidMap.delete(this.id);
+
+        // Inform the player why they were disconnected
+        this.socket.emit("reason", reason);
+        this.socket.disconnect();
     }
 }
 
