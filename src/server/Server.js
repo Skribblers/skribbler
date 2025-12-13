@@ -18,6 +18,9 @@ class Server extends events {
     }
 
     options = {};
+    /**
+	 * @type {serverIo | null}
+	 */
     serverIo = null;
 
     // List of all lobbies that exist for the server
@@ -34,6 +37,8 @@ class Server extends events {
                 methods: ["GET", "POST"]
             }
         });
+
+        this.serverIo = io;
 
         io.on("connection", (socket) => this._handleConnection(socket, this));
 
@@ -90,7 +95,7 @@ class Server extends events {
      * @param {Object} [options]
      */
     createLobby(options) {
-        const lobby = new Lobby(options);
+        const lobby = new Lobby(options, this.serverIo);
 
         this.lobbies.set(lobby.id, lobby);
         console.log(`Created lobby ID: ${lobby.id}`);

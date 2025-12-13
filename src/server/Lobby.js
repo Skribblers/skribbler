@@ -10,7 +10,7 @@ class Lobby extends events {
     ownerId = -1;
 
     settings = {
-        language: Language.ENGLISH,
+        language: Number(Language.ENGLISH),
         maxPlayers: 12,
         maxDrawTime: 90,
         maxRounds: 3,
@@ -21,15 +21,18 @@ class Lobby extends events {
     }
 
     players = new Map();
+    // Mappings between a player's session ID to their player ID
+    sidMap = new Map();
 
     /**
      * @param {any} options
      */
-    constructor(options) {
+    constructor(options, io) {
         super();
 
+        this.io = io;
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
-        this.settings.language = options.language;
+        this.settings.language = Number(options.language);
     }
 
     /**
@@ -37,6 +40,8 @@ class Lobby extends events {
      * @param {any} loginData
      */
     _playerJoin(socket, loginData) {
+        socket.join(this.id);
+
         const player = new ServerPlayer({
             socket,
             server: this,
@@ -47,9 +52,10 @@ class Lobby extends events {
             }
         });
 
-        if(this.players.size === 0) this.ownerId = player.id;
+        if(this.lobbyType === LobbyType.PRIVATE && this.players.size === 0) this.ownerId = player.id;
 
         this.players.set(player.id, player);
+        this.sidMap.set(socket.id, player.id);
 
         // Get a list of players to send
         const players = [];
@@ -72,11 +78,35 @@ class Lobby extends events {
             }
         });
 
+        // Announce to all online players that a new player has joined
+        socket.broadcast.to(this.id).emit("data", {
+            id: Packets.PLAYER_JOIN,
+            data: player.publicInfo
+        });
+
         socket.on("data", (data) => this._handlePacket(socket, data));
     }
 
     _handlePacket(socket, data) {
-        console.log(data);
+        if(typeof data.id !== "number") return;
+
+        const playerId = this.sidMap.get(socket.id);
+        console.log(playerId);
+        console.log(socket.rooms);
+
+        switch(data.id) {
+            case Packets.TEXT: {
+                const msg = data.data.substring(0, 100);
+
+                this.emit(Packets.TEXT, { id: playerId, msg });
+                break;
+            }
+        }
+    }
+
+    // Emit a packet to all online players in the lobby
+    emit(id, data) {
+        this.io.to(this.id).emit("data", { id, data });
     }
 }
 

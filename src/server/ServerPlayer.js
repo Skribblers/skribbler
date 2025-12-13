@@ -7,6 +7,7 @@ class ServerPlayer extends events {
         this.socket = socket;
         this.server = server;
 
+        this.sid = socket.id;
         this.id = player.id;
         this.name = player.name;
         this.avatar = player.avatar;
