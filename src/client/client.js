@@ -67,9 +67,9 @@ class Client extends events {
 	drawerId = null;
 
 	/**
-	 * @type {ClientPlayer[]}
+	 * @type {Map<Number, ClientPlayer>}
 	 */
-	players = [];
+	players = new Map();
 	time = 0;
 	/**
 	 * @type {Array<String>}
@@ -121,7 +121,7 @@ class Client extends events {
 
 					const player = new ClientPlayer(data, this);
 
-					this.players.push(player);
+					this.players.set(player.id, player);
 					this.emit("playerJoin", player);
 					break;
 				}
@@ -131,10 +131,10 @@ class Client extends events {
 						typeof data?.reason !== "number"
 					) return console.log(`Received invalid packet. ID: 2.`);
 
-					const index = this.players.findIndex(plr => plr.id === data.id);
-					if(index === -1) break;
+					const player = this.players.get(data.id);
+					if(!player) return;
 
-					const player = this.players.splice(index, 1)[0];
+					this.players.delete(data.id);
 
 					this.emit("playerLeave", {
 						player: player,
@@ -153,8 +153,8 @@ class Client extends events {
 					) return console.log(`Received invalid packet. ID: 2.`);
 
 					// Get the player that voted to kick, and who they voted for
-					const voter = this.players.find(plr => plr.id === data[0]);
-					const votee = this.players.find(plr => plr.id === data[1]);
+					const voter = this.players.get(data[0]);
+					const votee = this.players.get(data[1]);
 					if(!voter || !votee) break;
 
 					this.emit("votekick", {
@@ -171,7 +171,7 @@ class Client extends events {
 						typeof data?.vote !== "number"
 					) return console.log(`Received invalid packet. ID: 8.`);
 
-					const player = this.players.find(plr => plr.id === data.id);
+					const player = this.players.get(data.id);
 					if(!player) break;
 
 					this.emit("vote", {
@@ -186,7 +186,7 @@ class Client extends events {
 						typeof data?.id !== "number"
 					) return console.log(`Received invalid packet. ID: 9.`);
 
-					const player = this.players.find(plr => plr.id === data.id);
+					const player = this.players.get(data.id);
 					if(!player) break;
 
 					player.avatar = data.avatar;
@@ -220,7 +220,9 @@ class Client extends events {
 					this.userId = data.me;
 					this.ownerId = data.owner;
 
-					this.players = data.users.map((/** @type {Object} */ player) => new ClientPlayer(player, this));
+					for(const player of data.users) {
+						this.players.set(player.id, new ClientPlayer(player, this));
+					}
 
 					this.time = state.time;
 					this.drawerId = state.data?.id;
@@ -272,8 +274,8 @@ class Client extends events {
 
 							// Scores are reset
 							if(this.round === 1) {
-								for(const player of this.players) {
-									player.score = 0;
+								for(const obj of this.players) {
+									obj[1].score = 0;
 								}
 							}
 
@@ -341,7 +343,9 @@ class Client extends events {
 							};
 
 							let counter = 0;
-							for(const player of this.players) {
+							for(const obj of this.players) {
+								const player = obj[1];
+
 								player.guessed = false;
 								player.score = data.data.scores[(counter * 3) + 1];
 
@@ -371,7 +375,7 @@ class Client extends events {
 								 * player[1] = Leaderboard position
 								 * player[2] = Unknown
 								 */
-								leaderboard[player[1]] = this.players.find(plr => plr.id === player[0]);
+								leaderboard[player[1]] = this.players.get(player[0]);
 							}
 
 							this.emit("stateUpdate", {
@@ -387,7 +391,7 @@ class Client extends events {
 							this.round = 0;
 
 							for(const player of this.players) {
-								player.score = 0;
+								player[1].score = 0;
 							}
 
 							this.emit("stateUpdate", {
@@ -433,7 +437,7 @@ class Client extends events {
 				case Packets.PLAYER_GUESSED: {
 					if(typeof data?.id !== "number") return console.log(`Received invalid packet. ID: 15.`);
 
-					const player = this.players.find(plr => plr.id === data.id);
+					const player = this.players.get(data.id);
 					if(!player) break;
 
 					player.guessed = true;
@@ -458,7 +462,7 @@ class Client extends events {
 				case Packets.SET_OWNER: {
 					if(typeof data !== "number") return console.log(`Received invalid packet. ID: 17.`);
 
-					const player = this.players.find(plr => plr.id === data);
+					const player = this.players.get(data);
 					if(!player) break;
 
 					this.ownerId = data;
@@ -496,7 +500,7 @@ class Client extends events {
 						typeof data.msg !== "string"
 					) return console.log(`Received invalid packet. ID: 30.`);
 
-					const player = this.players.find(plr => plr.id === data.id);
+					const player = this.players.get(data.id);
 					if(!player) break;
 
 					this.emit("text", {
@@ -522,7 +526,7 @@ class Client extends events {
 						typeof data?.id !== "number"
 					) return console.log(`Received invalid packet. ID: 90.`);
 
-					const player = this.players.find(plr => plr.id === data.id);
+					const player = this.players.get(data.id);
 					if(!player) break;
 
 					player.name = data.name;
@@ -585,7 +589,9 @@ class Client extends events {
 	 * @readonly
 	 */
 	get user() {
-		return this.players.find(plr => plr.id === this.userId) ?? null;
+		if(!this.userId) return null;
+
+		return this.players.get(this.userId) ?? null;
 	}
 
 	/**
@@ -595,7 +601,9 @@ class Client extends events {
 	 * @readonly
 	 */
 	get owner() {
-		return this.players.find(plr => plr.id === this.ownerId) ?? null;
+		if(!this.ownerId) return null;
+
+		return this.players.get(this.ownerId) ?? null;
 	}
 
 	/**
@@ -605,7 +613,9 @@ class Client extends events {
 	 * @readonly
 	 */
 	get drawer() {
-		return this.players.find(plr => plr.id === this.drawerId) ?? null;
+		if(!this.drawerId) return null;
+
+		return this.players.get(this.drawerId) ?? null;
 	}
 
 	/**
