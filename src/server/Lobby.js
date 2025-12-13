@@ -1,7 +1,7 @@
 const events = require("events");
 const crypto = require("crypto");
 const { ServerPlayer } = require("./ServerPlayer.js");
-const { Language, Packets, LobbyType, GameState, WordMode } = require("../constants.js");
+const { Language, Packets, LobbyType, GameState, WordMode, LeaveReason } = require("../constants.js");
 
 class Lobby extends events {
     id = crypto.randomBytes(8).toString("base64url");
@@ -27,10 +27,10 @@ class Lobby extends events {
     /**
      * @param {any} options
      */
-    constructor(options, io) {
+    constructor(options, server) {
         super();
 
-        this.io = io;
+        this.server = server;
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
         this.settings.language = Number(options.lang ?? Language.ENGLISH);
     }
@@ -44,7 +44,7 @@ class Lobby extends events {
 
         const player = new ServerPlayer({
             socket,
-            server: this,
+            lobby: this,
             player: {
                 id: this.players.size + 1,
                 name: loginData.name,
@@ -79,12 +79,10 @@ class Lobby extends events {
         });
 
         // Announce to all online players that a new player has joined
-        socket.broadcast.to(this.id).emit("data", {
-            id: Packets.PLAYER_JOIN,
-            data: player.publicInfo
-        });
+        this.broadcast(socket, Packets.PLAYER_JOIN, player.publicInfo);
 
         socket.on("data", (data) => this._handlePacket(socket, data));
+        socket.on("disconnect", () => this._handleDisconnect(socket));
     }
 
     _handlePacket(socket, data) {
@@ -102,9 +100,47 @@ class Lobby extends events {
         }
     }
 
+    _handleDisconnect(socket) {
+        const playerId = this.sidMap.get(socket.id);
+        if(!playerId) return;
+
+        // Announce to all online players that a player has left
+        this.broadcast(socket, Packets.PLAYER_LEAVE, {
+            id: playerId,
+            reason: LeaveReason.DISCONNECT
+        });
+
+        // Delete the player from the lobby's player list
+        this.players.delete(playerId);
+        this.sidMap.delete(playerId);
+
+        // If there are no more players left in the lobby, then delete the lobby
+        if(this.players.size === 0) {
+            this.server.deleteLobby(this);
+            return;
+        }
+
+        // Set a new host if the player who left was the host
+        if(this.ownerId === playerId) {
+            const [ id ] = this.players.entries().next().value;
+
+            this.setHost(id);
+        }
+    }
+
     // Emit a packet to all online players in the lobby
     emit(id, data) {
-        this.io.to(this.id).emit("data", { id, data });
+        this.server.serverIo.to(this.id).emit("data", { id, data });
+    }
+
+    // Emit a packet to all online players in the lobby except for the socket
+    broadcast(socket, id, data) {
+        socket.broadcast.to(this.id).emit("data", {id, data});
+    }
+
+    setHost(newHostId) {
+        this.ownerId = newHostId;
+        this.emit(Packets.SET_OWNER, newHostId);
     }
 }
 

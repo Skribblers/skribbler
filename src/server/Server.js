@@ -95,12 +95,21 @@ class Server extends events {
      * @param {Object} [options]
      */
     createLobby(options) {
-        const lobby = new Lobby(options, this.serverIo);
+        const lobby = new Lobby(options, this);
 
         this.lobbies.set(lobby.id, lobby);
         console.log(`Created lobby ID: ${lobby.id}`);
 
         return lobby;
+    }
+
+    /**
+     * @param {Lobby} lobby
+     */
+    deleteLobby(lobby) {
+        this.lobbies.delete(lobby.id);
+
+        console.log(`${lobby.id} has been deleted`);
     }
 }
 

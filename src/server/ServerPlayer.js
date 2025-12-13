@@ -1,11 +1,11 @@
 const events = require("events");
 
 class ServerPlayer extends events {
-    constructor({ socket, server, player }) {
+    constructor({ socket, lobby, player }) {
         super();
 
         this.socket = socket;
-        this.server = server;
+        this.lobby = lobby;
 
         this.sid = socket.id;
         this.id = player.id;
