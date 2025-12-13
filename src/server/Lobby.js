@@ -1,7 +1,7 @@
 const events = require("events");
 const crypto = require("crypto");
 const { ServerPlayer } = require("./ServerPlayer.js");
-const { Language, Packets, WordMode } = require("../constants.js");
+const { Language, Packets, LobbyType, WordMode } = require("../constants.js");
 
 class Lobby extends events {
     id = crypto.randomBytes(8).toString("base64url");
@@ -10,7 +10,7 @@ class Lobby extends events {
     ownerId = -1;
 
     settings = {
-        Language: Language.ENGLISH,
+        language: Language.ENGLISH,
         maxPlayers: 12,
         maxDrawTime: 90,
         maxRounds: 3,
@@ -28,7 +28,8 @@ class Lobby extends events {
     constructor(options) {
         super();
 
-        this.lobbyType = options.type;
+        this.lobbyType = options.type ?? LobbyType.PUBLIC;
+        this.settings.language = options.language;
     }
 
     /**

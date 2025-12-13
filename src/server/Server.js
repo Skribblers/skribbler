@@ -65,7 +65,24 @@ class Server extends events {
                 return;
             }
 
-            return socket.disconnect();
+            // Try to find a lobby for the user
+            let foundLobby;
+            for(const obj of this.lobbies) {
+                const lobby = obj[1];
+
+                if(
+                    lobby.lobbyType !== LobbyType.PUBLIC ||
+                    lobby.players.size > lobby.settings.maxPlayers
+                ) continue;
+
+                foundLobby = lobby;
+                break;
+            }
+
+            // If we were not able to find a lobby for the user, then create one
+            if(!foundLobby) foundLobby = server.createLobby({ language: data.lang });
+
+            foundLobby._playerJoin(socket, data);
         });
     }
 
@@ -76,6 +93,7 @@ class Server extends events {
         const lobby = new Lobby(options);
 
         this.lobbies.set(lobby.id, lobby);
+        console.log(`Created lobby ID: ${lobby.id}`);
 
         return lobby;
     }
