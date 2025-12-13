@@ -32,7 +32,7 @@ class Lobby extends events {
 
         this.io = io;
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
-        this.settings.language = Number(options.language);
+        this.settings.language = Number(options.lang ?? Language.ENGLISH);
     }
 
     /**
@@ -91,8 +91,6 @@ class Lobby extends events {
         if(typeof data.id !== "number") return;
 
         const playerId = this.sidMap.get(socket.id);
-        console.log(playerId);
-        console.log(socket.rooms);
 
         switch(data.id) {
             case Packets.TEXT: {
