@@ -6,6 +6,9 @@ const { Packets, LeaveReason } = require("../constants.js");
 const { Socket } = require("socket.io");
 
 class ServerPlayer extends events {
+    votekicks = 0;
+    didVoteToKick = false;
+
     /**
      * @class
      * @param {Object} options

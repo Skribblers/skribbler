@@ -10,7 +10,6 @@ const { Socket } = require("socket.io");
 class Lobby extends events {
     id = crypto.randomBytes(8).toString("base64url");
 
-    lobbyType = LobbyType.PUBLIC;
     ownerId = -1;
 
     settings = {
@@ -136,6 +135,31 @@ class Lobby extends events {
                 break;
             }
 
+            case Packets.VOTEKICK: {
+                // Prevent the player from voting multiple times
+                if(player.didVoteToKick) return;
+
+                const votee = this.players.get(packet.data);
+                if(!votee) return;
+
+                const votesRequired = Math.floor(this.players.size / 2) + 1;
+
+                player.didVoteToKick = true;
+                votee.votekicks++;
+
+                this.broadcast(votee.socket, Packets.VOTEKICK, [
+                    playerId,
+                    votee.id,
+                    votee.votekicks,
+                    votesRequired
+                ]);
+
+                if(votee.votekicks >= votesRequired) {
+                    votee.remove(LeaveReason.KICKED);
+                }
+                break;
+            }
+
             case Packets.UPDATE_SETTINGS: {
                 const settingId = packet.data.id;
                 const settingVal = packet.data.val;
@@ -223,7 +247,7 @@ class Lobby extends events {
      * @param {any} [data] - Packet data
      */
     broadcast(socket, id, data) {
-        socket.broadcast.to(this.id).emit("data", {id, data});
+        socket.broadcast.to(this.id).emit("data", { id, data });
     }
 
     /**
