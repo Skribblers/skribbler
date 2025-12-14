@@ -9,8 +9,15 @@ const http = require("http");
 const { Server: serverIo, Socket } = require("socket.io");
 
 class Server extends events {
+    /**
+     * @class
+     * @param {Object} [options] - Server options
+     * @param {Number} [options.port] - Port to host the server on
+     */
     constructor(options = {}) {
         super();
+
+        this.port = options.port ?? 3000;
 
         this.options = options
 
@@ -45,8 +52,8 @@ class Server extends events {
 
         io.on("connection", (socket) => this._handleConnection(socket, this));
 
-        server.listen(3000, () => {
-            console.log(`Started server on http://localhost:3000`);
+        server.listen(this.port, () => {
+            console.log(`Started server on http://localhost:${this.port}`);
         });
     }
 
