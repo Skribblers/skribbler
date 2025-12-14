@@ -49,7 +49,7 @@ class Server extends events {
 
     /**
      * @param {Socket} socket
-     * @param {any} server
+     * @param {Server} server
      */
     async _handleConnection(socket, server) {
         socket.on("login", (data) => {
@@ -104,10 +104,14 @@ class Server extends events {
     }
 
     /**
-     * @param {Object} [options]
+     * @name createLobby
+     * @description Create a lobby on the server
+     * @param {Object} [options] - Lobby options
+     * @param {Number} [options.type] - Whether the lobby should be public or private
+     * @param {Number} [options.language] - The language the lobby should use
      */
     createLobby(options) {
-        const lobby = new Lobby(options, this);
+        const lobby = new Lobby(this, options);
 
         this.lobbies.set(lobby.id, lobby);
         console.log(`Created lobby ID: ${lobby.id}`);
@@ -116,6 +120,8 @@ class Server extends events {
     }
 
     /**
+     * @name deleteLobby
+     * @description Delte a lobby from the server
      * @param {Lobby} lobby
      */
     deleteLobby(lobby) {

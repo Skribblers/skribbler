@@ -1,12 +1,16 @@
+// @ts-check
 const events = require("events");
 const crypto = require("crypto");
 const { ServerPlayer } = require("./ServerPlayer.js");
 const { Language, Packets, LobbyType, GameState, Settings, SettingsMinValue, SettingsMaxValue, WordMode, LeaveReason } = require("../constants.js");
 
+// eslint-disable-next-line no-unused-vars
+const { Socket } = require("socket.io");
+
 class Lobby extends events {
     id = crypto.randomBytes(8).toString("base64url");
 
-    lobbyType = null;
+    lobbyType = LobbyType.PUBLIC;
     ownerId = -1;
 
     settings = {
@@ -27,18 +31,23 @@ class Lobby extends events {
     blockedIps = new Set();
 
     /**
-     * @param {any} options
+     * @class
+     * @param {Object} [options] - Lobby options
+     * @param {Number} [options.type] - Whether the lobby should be public or private
+     * @param {Number} [options.language] - The language the lobby should use
+     * @param {any} server
      */
-    constructor(options, server) {
+    constructor(server, options = {}) {
         super();
-
         this.server = server;
+
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
+        // @ts-expect-error
         this.settings[Settings.LANGUAGE] = options.language ?? Language.ENGLISH;
     }
 
     /**
-     * @param {any} socket
+     * @param {Socket} socket
      * @param {any} loginData
      */
     _playerJoin(socket, loginData) {
@@ -65,7 +74,7 @@ class Lobby extends events {
             players.push(obj[1].publicInfo);
         }
 
-        player.emit(Packets.LOBBY_DATA, {
+        player.send(Packets.LOBBY_DATA, {
             settings: Object.values(this.settings),
             id: this.id,
             type: this.lobbyType,
@@ -83,10 +92,14 @@ class Lobby extends events {
         // Announce to all online players that a new player has joined
         this.broadcast(socket, Packets.PLAYER_JOIN, player.publicInfo);
 
-        socket.on("data", (data) => this._handlePacket(socket, data));
+        socket.on("data", (/** @type {any} */ data) => this._handlePacket(socket, data));
         socket.on("disconnect", () => this._handleDisconnect(socket));
     }
 
+    /**
+     * @param {Socket} socket
+     * @param {any} packet
+     */
     _handlePacket(socket, packet) {
         if(typeof packet.id !== "number") return;
 
@@ -119,6 +132,7 @@ class Lobby extends events {
 
                 // If the packet fails verification, then we resend the proper setting back to the client to avoid the client from having desynced settings
                 const player = this.players.get(playerId);
+                // @ts-expect-error
                 const oldData = { id: settingId, val: this.settings[settingId] };
 
                 if(this.ownerId !== playerId) return player.emit(Packets.UPDATE_SETTINGS, oldData);
@@ -128,8 +142,8 @@ class Lobby extends events {
 
                 // Make sure setting is inside bounds
                 if(
-                    SettingsMinValue[settingId] > settingVal ||
-                    SettingsMaxValue[settingId] < settingVal
+                    // @ts-expect-error
+                    SettingsMinValue[settingId] > settingVal || SettingsMaxValue[settingId] < settingVal
                 ) return player.emit(Packets.UPDATE_SETTINGS, oldData);
 
                 this.updateSetting(settingId, settingVal);
@@ -144,12 +158,15 @@ class Lobby extends events {
                 // DEBUGGING FEATURE - REMOVE ON RELEASE
                 if(msg === "sethost") this.setHost(playerId);
 
-                this.emit(Packets.TEXT, { id: playerId, msg });
+                this.send(Packets.TEXT, { id: playerId, msg });
                 break;
             }
         }
     }
 
+    /**
+     * @param {Socket} socket
+     */
     _handleDisconnect(socket) {
         const playerId = this.sidMap.get(socket.id);
         if(!playerId) return;
@@ -172,34 +189,58 @@ class Lobby extends events {
 
         // Set a new host if the player who left was the host
         if(this.ownerId === playerId) {
+            // @ts-expect-error
             const [ id ] = this.players.entries().next().value;
 
             this.setHost(id);
         }
     }
 
-    // Emit a packet to all online players in the lobby
-    emit(id, data) {
+    /**
+     * @name send
+     * @description Send a data packet to all online players in the lobby
+     * @param {Number} id - Packet ID
+     * @param {any} [data] - Packet data
+     */
+    send(id, data) {
         this.server.serverIo.to(this.id).emit("data", { id, data });
     }
 
-    // Emit a packet to all online players in the lobby except for the socket
+    /**
+     * @name broadcast
+     * @description Send a data packet to all online players in the lobby except for the socket
+     * @param {Socket} socket - Socket
+     * @param {Number} id - Packet ID
+     * @param {any} [data] - Packet data
+     */
     broadcast(socket, id, data) {
         socket.broadcast.to(this.id).emit("data", {id, data});
     }
 
+    /**
+     * @name updateSetting
+     * @description Update a setting for the lobby and relay it to all online players
+     * @param {string | number} setting
+     * @param {string | number} value
+     */
     updateSetting(setting, value) {
+        // @ts-expect-error
         this.settings[setting] = value;
 
-        this.emit(Packets.UPDATE_SETTINGS, {
+        this.send(Packets.UPDATE_SETTINGS, {
             id: setting,
             val: value
         });
     }
 
+    /**
+     * @name setHost
+     * @description Set a player to become the host of the lobby
+     * @param {Number} newHostId - The ID of the player who should become host
+     */
     setHost(newHostId) {
         this.ownerId = newHostId;
-        this.emit(Packets.SET_OWNER, newHostId);
+        this.send(Packets.SET_OWNER, newHostId);
     }
 }
 
