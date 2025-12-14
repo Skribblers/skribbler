@@ -14,12 +14,15 @@ class Server extends events {
      * @param {Object} [options] - Server options
      * @param {Number} [options.port] - Port to host the server on
      * @param {Number} [options.maxLobbies] - Maximum amount of lobbies that the server can hold
+     * @param {Array<Number>} [options.ignorePackets] - List of data packet IDs that the server should ignore
      */
     constructor(options = {}) {
         super();
 
         this.port = options.port ?? 3000;
         this.maxLobbies = options.maxLobbies ?? 512;
+        // This option can be useful if someone wants to override how some packets are handled
+        this.ignorePackets = options.ignorePackets ?? [];
 
         this.init()
     }

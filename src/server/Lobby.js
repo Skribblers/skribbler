@@ -61,9 +61,14 @@ class Lobby extends events {
 
     /**
      * @param {Socket} socket
-     * @param {any} loginData
+     * @param {Object} login
+     * @param {String | Number} login.join
+     * @param {Number} login.create
+     * @param {String} login.name
+     * @param {String} login.lang
+     * @param {Array<Number>} login.avatar
      */
-    _playerJoin(socket, loginData) {
+    _playerJoin(socket, login) {
         socket.join(this.id);
 
         const player = new ServerPlayer({
@@ -71,8 +76,8 @@ class Lobby extends events {
             lobby: this,
             player: {
                 id: this._playerCounter++,
-                name: loginData.name,
-                avatar: loginData.avatar
+                name: login.name,
+                avatar: login.avatar
             }
         });
 
@@ -107,10 +112,14 @@ class Lobby extends events {
 
     /**
      * @param {Socket} socket
-     * @param {any} packet
+     * @param {Object} packet
+     * @param {Number} packet.id
+     * @param {any} [packet.data]
      */
     _handlePacket(socket, packet) {
         if(typeof packet.id !== "number") return;
+
+        if(this.server.ignorePackets.includes(packet.id)) return;
 
         const sender = this.sidMap.get(socket.id);
         if(typeof sender === "undefined") return;
