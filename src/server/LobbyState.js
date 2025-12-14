@@ -20,6 +20,11 @@ class LobbyState {
      * @type {Set<Number>}
      */
     votekicks = new Set();
+    /**
+     * @description List of players who voted on an image
+     * @type {Set<Number>}
+     */
+    voters = new Set();
 
     /**
      * @description A list of players queued to be the drawer

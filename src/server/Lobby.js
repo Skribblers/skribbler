@@ -161,6 +161,24 @@ class Lobby extends events {
                 break;
             }
 
+            case Packets.VOTE: {
+                if(
+                    typeof packet.data !== "number" ||
+                    this.state.id !== GameState.START_DRAW ||
+                    // Don't let the drawer vote for their own drawing
+                    this.state.drawer?.id === sender.id ||
+                    this.state.voters.has(sender.id)
+                ) break;
+
+                this.state.voters.add(sender.id);
+
+                this.send(Packets.VOTE, {
+                    id: sender.id,
+                    vote: packet.data
+                });
+                break;
+            }
+
             case Packets.UPDATE_SETTINGS: {
                 const settingId = packet.data.id;
                 const settingVal = packet.data.val;
@@ -203,6 +221,18 @@ class Lobby extends events {
                 this.state.drawCommands.push(...packet.data);
 
                 this.broadcast(socket, Packets.DRAW, packet.data);
+                break;
+            }
+
+            case Packets.CLEAR_CANVAS: {
+                if(
+                    this.state.drawer?.id !== sender.id ||
+                    this.state.id !== GameState.START_DRAW
+                ) break;
+
+                this.state.drawCommands = [];
+
+                this.broadcast(socket, Packets.CLEAR_CANVAS);
                 break;
             }
 
