@@ -100,6 +100,15 @@ class ServerPlayer extends events {
 
         this.lobby.send(Packets.UPDATE_NAME, { id: this.id, name })
     }
+
+    /**
+     * @name setHost
+     * @description Set the player to be the host of the lobby
+     */
+    setHost() {
+        this.lobby.ownerId = this.id;
+        this.lobby.send(Packets.SET_OWNER, this.id);
+    }
 }
 
 module.exports = { ServerPlayer };

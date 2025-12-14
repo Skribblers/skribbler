@@ -165,7 +165,7 @@ class Lobby extends events {
                 const msg = packet.data.substring(0, 100);
 
                 // DEBUGGING FEATURE - REMOVE ON RELEASE
-                if(msg === "sethost") this.setHost(playerId);
+                if(msg === "sethost") player.setHost();
 
                 this.send(Packets.TEXT, { id: playerId, msg });
                 break;
@@ -198,10 +198,10 @@ class Lobby extends events {
 
         // Set a new host if the player who left was the host
         if(this.ownerId === playerId) {
-            // @ts-expect-error
-            const [ id ] = this.players.entries().next().value;
+            const obj = this.players.entries().next().value;
+            if(!obj) return;
 
-            this.setHost(id);
+            obj[1].setHost();
         }
     }
 
@@ -240,16 +240,6 @@ class Lobby extends events {
             id: setting,
             val: value
         });
-    }
-
-    /**
-     * @name setHost
-     * @description Set a player to become the host of the lobby
-     * @param {Number} newHostId - The ID of the player who should become host
-     */
-    setHost(newHostId) {
-        this.ownerId = newHostId;
-        this.send(Packets.SET_OWNER, newHostId);
     }
 }
 
