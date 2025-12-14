@@ -47,7 +47,7 @@ class ServerPlayer extends events {
      * @name send
      * @description Send a data packet to the player
      * @param {Number} id
-     * @param {any} data
+     * @param {any} [data]
      */
     send(id, data) {
         this.socket.emit("data", { id, data });
@@ -67,7 +67,7 @@ class ServerPlayer extends events {
 
         // Remove the player from the lobby's player list
         this.lobby.players.delete(this.id);
-        this.lobby.sidMap.delete(this.id);
+        this.lobby.sidMap.delete(this.sid);
 
         // Inform the player why they were disconnected
         this.socket.emit("reason", reason);

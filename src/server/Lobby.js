@@ -24,8 +24,14 @@ class Lobby extends events {
         7: 0
     }
 
+    /**
+     * @type {Map<Number, ServerPlayer>}
+     */
     players = new Map();
-    // Mappings between a player's session ID to their player ID
+    /**
+     * @description Mappings between a player's session ID to their player ID
+     * @type {Map<String, Number>}
+     */
     sidMap = new Map();
 
     blockedIps = new Set();
@@ -104,6 +110,10 @@ class Lobby extends events {
         if(typeof packet.id !== "number") return;
 
         const playerId = this.sidMap.get(socket.id);
+        if(typeof playerId === "undefined") return;
+
+        const player = this.players.get(playerId);
+        if(typeof player === "undefined") return;
 
         switch(packet.id) {
             case Packets.HOST_KICK: {
@@ -131,20 +141,19 @@ class Lobby extends events {
                 const settingVal = packet.data.val;
 
                 // If the packet fails verification, then we resend the proper setting back to the client to avoid the client from having desynced settings
-                const player = this.players.get(playerId);
                 // @ts-expect-error
                 const oldData = { id: settingId, val: this.settings[settingId] };
 
-                if(this.ownerId !== playerId) return player.emit(Packets.UPDATE_SETTINGS, oldData);
+                if(this.ownerId !== playerId) return player.send(Packets.UPDATE_SETTINGS, oldData);
 
                 // Make sure the setting is valid
-                if(!Object.hasOwn(this.settings, settingId)) return player.emit(Packets.UPDATE_SETTINGS, oldData);
+                if(!Object.hasOwn(this.settings, settingId)) return player.send(Packets.UPDATE_SETTINGS, oldData);
 
                 // Make sure setting is inside bounds
                 if(
                     // @ts-expect-error
                     SettingsMinValue[settingId] > settingVal || SettingsMaxValue[settingId] < settingVal
-                ) return player.emit(Packets.UPDATE_SETTINGS, oldData);
+                ) return player.send(Packets.UPDATE_SETTINGS, oldData);
 
                 this.updateSetting(settingId, settingVal);
                 break;
@@ -169,7 +178,7 @@ class Lobby extends events {
      */
     _handleDisconnect(socket) {
         const playerId = this.sidMap.get(socket.id);
-        if(!playerId) return;
+        if(typeof playerId === "undefined") return;
 
         // Announce to all online players that a player has left
         this.broadcast(socket, Packets.PLAYER_LEAVE, {
@@ -179,7 +188,7 @@ class Lobby extends events {
 
         // Delete the player from the lobby's player list
         this.players.delete(playerId);
-        this.sidMap.delete(playerId);
+        this.sidMap.delete(socket.id);
 
         // If there are no more players left in the lobby, then delete the lobby
         if(this.players.size === 0) {
