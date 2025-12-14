@@ -13,13 +13,13 @@ class Server extends events {
      * @class
      * @param {Object} [options] - Server options
      * @param {Number} [options.port] - Port to host the server on
+     * @param {Number} [options.maxLobbies] - Maximum amount of lobbies that the server can hold
      */
     constructor(options = {}) {
         super();
 
         this.port = options.port ?? 3000;
-
-        this.options = options
+        this.maxLobbies = options.maxLobbies ?? 512;
 
         this.init()
     }
@@ -36,7 +36,7 @@ class Server extends events {
      */
     lobbies = new Map();
 
-    async init() {
+    init() {
         if(this.serverIo !== null) throw Error("Server has already started");
 
         const server = http.createServer();
@@ -85,6 +85,10 @@ class Server extends events {
 
             // Create a private lobby for the user if requested
             if(data.create === LobbyType.PRIVATE) {
+                // Check if this server has hit the maximum amount of lobbies
+                // While the ROOM_FULL join error code isn't exactly accurate, it's the closest to one referencing the server being full
+                if(this.lobbies.size >= this.maxLobbies) return this._disconnectWithError(socket, JoinError.ROOM_FULL);
+
                 const lobby = server.createLobby({ type: LobbyType.PRIVATE, language });
 
                 lobby._playerJoin(socket, data);
@@ -123,7 +127,12 @@ class Server extends events {
             }
 
             // If we were not able to find a lobby then create one
-            if(!foundLobby) foundLobby = server.createLobby({ language });
+            if(!foundLobby) {
+                // Check if this server has hit the maximum amount of lobbies
+                if(this.lobbies.size >= this.maxLobbies) return this._disconnectWithError(socket, JoinError.ROOM_NOT_FOUND);
+
+                foundLobby = server.createLobby({ language });
+            }
 
             foundLobby._playerJoin(socket, data);
         });
