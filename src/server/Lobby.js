@@ -27,7 +27,7 @@ class Lobby extends events {
     players = new Map();
     /**
      * @description Mappings between a player's session ID to their player ID
-     * @type {Map<String, Number>}
+     * @type {Map<String, ServerPlayer>}
      */
     sidMap = new Map();
     _playerCounter = 0;
@@ -72,7 +72,7 @@ class Lobby extends events {
         if(this.lobbyType === LobbyType.PRIVATE && this.players.size === 0) this.ownerId = player.id;
 
         this.players.set(player.id, player);
-        this.sidMap.set(socket.id, player.id);
+        this.sidMap.set(socket.id, player);
 
         // Get a list of players to send
         const players = [];
@@ -109,15 +109,12 @@ class Lobby extends events {
     _handlePacket(socket, packet) {
         if(typeof packet.id !== "number") return;
 
-        const playerId = this.sidMap.get(socket.id);
-        if(typeof playerId === "undefined") return;
-
-        const player = this.players.get(playerId);
-        if(typeof player === "undefined") return;
+        const sender = this.sidMap.get(socket.id);
+        if(typeof sender === "undefined") return;
 
         switch(packet.id) {
             case Packets.HOST_KICK: {
-                if(this.ownerId !== playerId) return;
+                if(this.ownerId !== sender.id) return;
 
                 const player = this.players.get(packet.data);
                 if(!player) return;
@@ -127,7 +124,7 @@ class Lobby extends events {
             }
 
             case Packets.HOST_BAN: {
-                if(this.ownerId !== playerId) return;
+                if(this.ownerId !== sender.id) return;
 
                 const player = this.players.get(packet.data);
                 if(!player) return;
@@ -138,18 +135,18 @@ class Lobby extends events {
 
             case Packets.VOTEKICK: {
                 // Prevent the player from voting multiple times
-                if(player.didVoteToKick) return;
+                if(sender.didVoteToKick) return;
 
                 const votee = this.players.get(packet.data);
                 if(!votee) return;
 
                 const votesRequired = Math.floor(this.players.size / 2) + 1;
 
-                player.didVoteToKick = true;
+                sender.didVoteToKick = true;
                 votee.votekicks++;
 
                 this.broadcast(votee.socket, Packets.VOTEKICK, [
-                    playerId,
+                    sender.id,
                     votee.id,
                     votee.votekicks,
                     votesRequired
@@ -169,16 +166,16 @@ class Lobby extends events {
                 // @ts-expect-error
                 const oldData = { id: settingId, val: this.settings[settingId] };
 
-                if(this.ownerId !== playerId) return player.send(Packets.UPDATE_SETTINGS, oldData);
+                if(this.ownerId !== sender.id) return sender.send(Packets.UPDATE_SETTINGS, oldData);
 
                 // Make sure the setting is valid
-                if(!Object.hasOwn(this.settings, settingId)) return player.send(Packets.UPDATE_SETTINGS, oldData);
+                if(!Object.hasOwn(this.settings, settingId)) return sender.send(Packets.UPDATE_SETTINGS, oldData);
 
                 // Make sure setting is inside bounds
                 if(
                     // @ts-expect-error
                     SettingsMinValue[settingId] > settingVal || SettingsMaxValue[settingId] < settingVal
-                ) return player.send(Packets.UPDATE_SETTINGS, oldData);
+                ) return sender.send(Packets.UPDATE_SETTINGS, oldData);
 
                 this.updateSetting(settingId, settingVal);
                 break;
@@ -203,9 +200,9 @@ class Lobby extends events {
                 const msg = packet.data.substring(0, 100);
 
                 // DEBUGGING FEATURE - REMOVE ON RELEASE
-                if(msg === "sethost") player.setHost();
+                if(msg === "sethost") sender.setHost();
 
-                this.send(Packets.TEXT, { id: playerId, msg });
+                this.send(Packets.TEXT, { id: sender.id, msg });
                 break;
             }
         }
@@ -215,18 +212,10 @@ class Lobby extends events {
      * @param {Socket} socket
      */
     _handleDisconnect(socket) {
-        const playerId = this.sidMap.get(socket.id);
-        if(typeof playerId === "undefined") return;
+        const player = this.sidMap.get(socket.id);
+        if(typeof player === "undefined") return;
 
-        // Announce to all online players that a player has left
-        this.broadcast(socket, Packets.PLAYER_LEAVE, {
-            id: playerId,
-            reason: LeaveReason.DISCONNECT
-        });
-
-        // Delete the player from the lobby's player list
-        this.players.delete(playerId);
-        this.sidMap.delete(socket.id);
+        player.remove(LeaveReason.DISCONNECT);
 
         // If there are no more players left in the lobby, then delete the lobby
         if(this.players.size === 0) {
@@ -235,7 +224,7 @@ class Lobby extends events {
         }
 
         // Set a new host if the player who left was the host
-        if(this.ownerId === playerId) {
+        if(this.ownerId === player.id) {
             const obj = this.players.entries().next().value;
             if(!obj) return;
 

@@ -62,7 +62,7 @@ class ServerPlayer extends events {
      * @param {Number} reason - Reason for the player's removal
      */
     remove(reason) {
-        // Announce to all online players about the kick/ban
+        // Announce to all online players about the kick, ban, or disconnect
         this.lobby.broadcast(this.socket, Packets.PLAYER_LEAVE, {
             id: this.id,
             reason: reason
@@ -73,8 +73,10 @@ class ServerPlayer extends events {
         this.lobby.sidMap.delete(this.sid);
 
         // Inform the player why they were disconnected
-        this.socket.emit("reason", reason);
-        this.socket.disconnect();
+        if(reason !== LeaveReason.DISCONNECT) {
+            this.socket.emit("reason", reason);
+            this.socket.disconnect();
+        }
 
         // Block the player's IP from rejoining if they should be banned
         if(reason === LeaveReason.BANNED) {
