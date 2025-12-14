@@ -1,6 +1,7 @@
 // @ts-check
 const events = require("events");
 const crypto = require("crypto");
+const { LobbyState } = require("./LobbyState.js");
 const { ServerPlayer } = require("./ServerPlayer.js");
 const { Language, Packets, LobbyType, GameState, Settings, SettingsMinValue, SettingsMaxValue, WordMode, LeaveReason, GameStartError } = require("../constants.js");
 
@@ -34,6 +35,8 @@ class Lobby extends events {
 
     blockedIps = new Set();
 
+    state = new LobbyState(this);
+
     /**
      * @class
      * @param {Object} [options] - Lobby options
@@ -50,6 +53,10 @@ class Lobby extends events {
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
         // @ts-expect-error
         this.settings[Settings.LANGUAGE] = options.language ?? Language.ENGLISH;
+
+        // if(this.lobbyType === LobbyType.PRIVATE) this.state._inGameWaitingRoom();
+
+        this.state._inGameWaitingRoom();
     }
 
     /**
@@ -88,11 +95,7 @@ class Lobby extends events {
             owner: this.ownerId,
             users: players,
             round: 0,
-            state: {
-                id: GameState.IN_GAME_WAITING_ROOM,
-                time: 0,
-                data: 0
-            }
+            state: this.state._currentStateData()
         });
 
         // Announce to all online players that a new player has joined
@@ -135,14 +138,14 @@ class Lobby extends events {
 
             case Packets.VOTEKICK: {
                 // Prevent the player from voting multiple times
-                if(sender.didVoteToKick) return;
+                if(this.state.votekicks.has(sender.id)) return;
 
                 const votee = this.players.get(packet.data);
                 if(!votee) return;
 
                 const votesRequired = Math.floor(this.players.size / 2) + 1;
 
-                sender.didVoteToKick = true;
+                this.state.votekicks.add(sender.id);
                 votee.votekicks++;
 
                 this.broadcast(votee.socket, Packets.VOTEKICK, [
@@ -181,7 +184,34 @@ class Lobby extends events {
                 break;
             }
 
+            case Packets.SELECT_WORD: {
+                if(
+                    this.state.id !== GameState.USER_PICKING_WORD ||
+                    this.state.drawer?.id !== sender.id
+                ) break;
+
+                this.state.chooseWord(packet.data);
+                break;
+            }
+
+            case Packets.DRAW: {
+                if(
+                    this.state.drawer?.id !== sender.id ||
+                    this.state.id !== GameState.START_DRAW
+                ) break;
+
+                this.state.drawCommands.push(...packet.data);
+
+                this.broadcast(socket, Packets.DRAW, packet.data);
+                break;
+            }
+
             case Packets.START_GAME: {
+                if(
+                    this.ownerId !== sender.id ||
+                    this.state.id !== GameState.IN_GAME_WAITING_ROOM
+                ) break;
+
                 if(this.players.size < 2) {
                     socket.emit("data", { 
                         id: Packets.GAME_START_ERROR,
@@ -191,6 +221,8 @@ class Lobby extends events {
                     });
                     return;
                 }
+
+                this.state.startGame();
                 break;
             }
 
