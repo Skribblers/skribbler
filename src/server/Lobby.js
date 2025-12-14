@@ -32,6 +32,7 @@ class Lobby extends events {
      * @type {Map<String, Number>}
      */
     sidMap = new Map();
+    _playerCounter = 0;
 
     blockedIps = new Set();
 
@@ -62,7 +63,7 @@ class Lobby extends events {
             socket,
             lobby: this,
             player: {
-                id: this.players.size + 1,
+                id: this._playerCounter++,
                 name: loginData.name,
                 avatar: loginData.avatar
             }
