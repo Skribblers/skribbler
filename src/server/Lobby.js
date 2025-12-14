@@ -2,14 +2,12 @@
 const events = require("events");
 const crypto = require("crypto");
 const { ServerPlayer } = require("./ServerPlayer.js");
-const { Language, Packets, LobbyType, GameState, Settings, SettingsMinValue, SettingsMaxValue, WordMode, LeaveReason } = require("../constants.js");
+const { Language, Packets, LobbyType, GameState, Settings, SettingsMinValue, SettingsMaxValue, WordMode, LeaveReason, GameStartError } = require("../constants.js");
 
 // eslint-disable-next-line no-unused-vars
 const { Socket } = require("socket.io");
 
 class Lobby extends events {
-    id = crypto.randomBytes(8).toString("base64url");
-
     ownerId = -1;
 
     settings = {
@@ -39,6 +37,7 @@ class Lobby extends events {
     /**
      * @class
      * @param {Object} [options] - Lobby options
+     * @param {String} [options.id] - The lobby ID to give the lobby
      * @param {Number} [options.type] - Whether the lobby should be public or private
      * @param {Number} [options.language] - The language the lobby should use
      * @param {any} server
@@ -47,6 +46,7 @@ class Lobby extends events {
         super();
         this.server = server;
 
+        this.id = options.id ?? crypto.randomBytes(8).toString("base64url");
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
         // @ts-expect-error
         this.settings[Settings.LANGUAGE] = options.language ?? Language.ENGLISH;
@@ -181,6 +181,19 @@ class Lobby extends events {
                 ) return player.send(Packets.UPDATE_SETTINGS, oldData);
 
                 this.updateSetting(settingId, settingVal);
+                break;
+            }
+
+            case Packets.START_GAME: {
+                if(this.players.size < 2) {
+                    socket.emit("data", { 
+                        id: Packets.GAME_START_ERROR,
+                        data: {
+                            id: GameStartError.NOT_ENOUGH_PLAYERS
+                        }
+                    });
+                    return;
+                }
                 break;
             }
 

@@ -23,7 +23,10 @@ class Server extends events {
 	 */
     serverIo = null;
 
-    // List of all lobbies that exist for the server
+    /**
+     * @description List of all lobbies that exist for the server
+     * @type {Map<String, Lobby>}
+     */
     lobbies = new Map();
 
     async init() {
@@ -88,6 +91,7 @@ class Server extends events {
 
                 if(
                     lobby.lobbyType !== LobbyType.PUBLIC ||
+                    // @ts-expect-error
                     lobby.players.size >= lobby.settings[Settings.MAX_PLAYER_COUNT] ||
                     lobby.blockedIps.has(socket.handshake.address)
                 ) continue;
@@ -107,8 +111,10 @@ class Server extends events {
      * @name createLobby
      * @description Create a lobby on the server
      * @param {Object} [options] - Lobby options
+     * @param {String} [options.id] - The lobby ID to give the lobby
      * @param {Number} [options.type] - Whether the lobby should be public or private
      * @param {Number} [options.language] - The language the lobby should use
+     * @returns {Lobby} lobby - The created lobby
      */
     createLobby(options) {
         const lobby = new Lobby(this, options);
