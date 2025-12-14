@@ -49,7 +49,7 @@ class Lobby extends events {
         super();
         this.server = server;
 
-        this.id = options.id ?? crypto.randomBytes(8).toString("base64url");
+        this.id = options.id ?? crypto.randomBytes(5).toString("base64url");
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
         // @ts-expect-error
         this.settings[Settings.LANGUAGE] = options.language ?? Language.ENGLISH;

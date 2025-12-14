@@ -1,7 +1,7 @@
 // @ts-check
 const events = require("events");
 const { Lobby } = require("./Lobby.js");
-const { LobbyType, Settings, SettingsMinValue, SettingsMaxValue, Language } = require("../constants.js");
+const { LobbyType, Settings, SettingsMinValue, SettingsMaxValue, Language, JoinError } = require("../constants.js");
 
 // Web server
 const http = require("http");
@@ -91,8 +91,23 @@ class Server extends events {
                 return;
             }
 
-            // Try to find a public lobby for the user
-            let foundLobby;
+            // Check if the lobby that a player is trying to join with exists
+            let foundLobby = this.lobbies.get(data.join);
+            if(foundLobby) {
+                // @ts-expect-error
+                if(foundLobby.players.size >= foundLobby.settings[Settings.MAX_PLAYER_COUNT]) {
+                    return this._disconnectWithError(socket, JoinError.ROOM_FULL);
+                }
+
+                if(foundLobby.blockedIps.has(socket.handshake.address)) {
+                    return this._disconnectWithError(socket, JoinError.BANNED_FROM_ROOM);
+                }
+
+                foundLobby._playerJoin(socket, data);
+                return;
+            }
+
+            // If lobby code isn't specified, or a lobby was not found, find a random public lobby
             for(const obj of this.lobbies) {
                 const lobby = obj[1];
 
@@ -112,6 +127,15 @@ class Server extends events {
 
             foundLobby._playerJoin(socket, data);
         });
+    }
+
+    /**
+     * @param {Socket} socket
+     * @param {Number} joinError
+     */
+    _disconnectWithError(socket, joinError = 0) {
+        socket.emit("joinerr", joinError);
+        socket.disconnect();
     }
 
     /**
