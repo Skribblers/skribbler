@@ -46,6 +46,15 @@ class ServerPlayer extends events {
     }
 
     /**
+     * @name isHost
+     * @description Return whether or not the player is the host of the lobby
+     * @readonly
+     */
+    get isHost() {
+        return this.lobby.ownerId === this.id
+    }
+
+    /**
      * @name send
      * @description Send a data packet to the player
      * @param {Number} id
@@ -67,9 +76,11 @@ class ServerPlayer extends events {
             reason: reason
         });
 
-        // Remove the player from the lobby's player list
+        // Remove references to the player in the lobby
         this.lobby.players.delete(this.id);
         this.lobby.sidMap.delete(this.sid);
+        this.lobby.state.votekicks.delete(this.id);
+        this.lobby.state.voters.delete(this.id);
 
         // Inform the player why they were disconnected
         if(reason !== LeaveReason.DISCONNECT) {
@@ -80,6 +91,20 @@ class ServerPlayer extends events {
         // Block the player's IP from rejoining if they should be banned
         if(reason === LeaveReason.BANNED) {
             this.lobby.blockedIps.add(this.socket.handshake.address);
+        }
+
+        // If this removal results in no more players left in the lobby, then delete the lobby entirely
+        if(this.lobby.players.size === 0) {
+            this.lobby.server.deleteLobby(this);
+            return;
+        }
+
+        // If the player who was removed is the host, then assign a new host
+        if(this.isHost) {
+            const obj = this.lobby.players.entries().next().value;
+            if(!obj) return;
+
+            obj[1].setHost();
         }
     }
 

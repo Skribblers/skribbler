@@ -278,20 +278,6 @@ class Lobby extends events {
         if(typeof player === "undefined") return;
 
         player.remove(LeaveReason.DISCONNECT);
-
-        // If there are no more players left in the lobby, then delete the lobby
-        if(this.players.size === 0) {
-            this.server.deleteLobby(this);
-            return;
-        }
-
-        // Set a new host if the player who left was the host
-        if(this.ownerId === player.id) {
-            const obj = this.players.entries().next().value;
-            if(!obj) return;
-
-            obj[1].setHost();
-        }
     }
 
     /**
