@@ -56,9 +56,7 @@ class Lobby extends events {
             7: 0
         }
 
-        // if(this.lobbyType === LobbyType.PRIVATE) this.state._privateLobbySetup();
-
-        this.state._privateLobbySetup();
+        this.state = new LobbyState(this, this.lobbyType);
     }
 
     /**
@@ -110,6 +108,14 @@ class Lobby extends events {
 
         socket.on("data", (/** @type {any} */ data) => this._handlePacket(socket, data));
         socket.on("disconnect", () => this._handleDisconnect(socket));
+
+        // If the public lobby is currently waiting for players, and we now have enough players, then start the game
+        if(
+            this.state.id === GameState.WAITING_FOR_PLAYERS &&
+            this.players.size >= 2
+        ) {
+            this.state._gameStartingSoon();
+        }
     }
 
     /**
@@ -285,9 +291,6 @@ class Lobby extends events {
                 if(typeof packet.data !== "string") return;
 
                 const msg = packet.data.substring(0, 100);
-
-                // DEBUGGING FEATURE - REMOVE ON RELEASE
-                if(msg === "sethost") sender.setHost();
 
                 this.send(Packets.TEXT, { id: sender.id, msg });
                 break;

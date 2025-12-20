@@ -1,11 +1,10 @@
 // @ts-check
-const { Packets, Settings, GameState, DrawResultsReason } = require("../constants.js");
+const { Packets, LobbyType, Settings, GameState, DrawResultsReason } = require("../constants.js");
 
 // eslint-disable-next-line no-unused-vars
 const { ServerPlayer } = require("./ServerPlayer.js");
 
 class LobbyState {
-    id = GameState.WAITING_FOR_PLAYERS;
     time = 0;
 
     round = 0;
@@ -58,9 +57,12 @@ class LobbyState {
     /**
      * @class
      * @param {any} lobby - Referencing Lobby
+     * @param {Number} [type] - The type of lobby
      */
-    constructor(lobby) {
+    constructor(lobby, type) {
         this.lobby = lobby
+
+        this.id = type === LobbyType.PUBLIC ? GameState.WAITING_FOR_PLAYERS : GameState.PRIVATE_LOBBY_SETUP;
     }
 
     /**
@@ -121,7 +123,7 @@ class LobbyState {
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
 
         this._timeout = setTimeout(() => {
-            this._newRound();
+            this.startGame();
         }, this.time * 1000);
     }
 
