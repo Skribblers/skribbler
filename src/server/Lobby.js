@@ -193,19 +193,18 @@ class Lobby extends events {
                 const settingVal = packet.data.val;
 
                 // If the packet fails verification, then we resend the proper setting back to the client to avoid the client from having desynced settings
-                // @ts-expect-error
-                const oldData = { id: settingId, val: this.settings[settingId] };
-
-                if(this.ownerId !== sender.id) return sender.send(Packets.UPDATE_SETTINGS, oldData);
-
-                // Make sure the setting is valid
-                if(!Object.hasOwn(this.settings, settingId)) return sender.send(Packets.UPDATE_SETTINGS, oldData);
-
-                // Make sure setting is inside bounds
                 if(
+                    // Make sure the person who sent the packet is the host
+                    this.ownerId !== sender.id ||
+                    // Make sure the setting ID that was sent is valid
+                    Object.hasOwn(this.settings, settingId) ||
+                    // Make sure the setting value is within bounds
                     // @ts-expect-error
-                    SettingsMinValue[settingId] > settingVal || SettingsMaxValue[settingId] < settingVal
-                ) return sender.send(Packets.UPDATE_SETTINGS, oldData);
+                    SettingsMinValue[settingId] > settingVal ||
+                    // @ts-expect-error
+                    SettingsMaxValue[settingId] < settingVal
+                    // @ts-expect-error
+                ) return sender.send(Packets.UPDATE_SETTINGS, { id: settingId, val: this.settings[settingId] });
 
                 this.updateSetting(settingId, settingVal);
                 break;
