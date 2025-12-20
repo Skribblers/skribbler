@@ -167,7 +167,7 @@ class LobbyState {
 
         // Force the drawer to pick the first word if they did not pick one in time
         this._timeout = setTimeout(() => {
-            this.word = words[0];
+            this.chooseWord(0);
         }, this.time * 1000);
     }
 
@@ -176,6 +176,7 @@ class LobbyState {
 
         this.id = GameState.START_DRAW;
         this.time = this.lobby.settings[Settings.MAX_DRAW_TIME];
+        this.drawCommands = [];
 
         const drawer = this.drawer;
         if(!drawer) return;
@@ -241,8 +242,6 @@ class LobbyState {
      * @param {Number} index - The index of the word the user choose
      */
     chooseWord(index) {
-        clearTimeout(this._timeout);
-
         this.word = this.availableWords[index];
         this.availableWords = [];
 

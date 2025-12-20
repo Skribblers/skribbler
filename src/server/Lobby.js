@@ -193,6 +193,8 @@ class Lobby extends events {
 
                 // If the packet fails verification, then we resend the proper setting back to the client to avoid the client from having desynced settings
                 if(
+                    // Lobby settings can only be updated in the waiting room
+                    this.state.id !== GameState.IN_GAME_WAITING_ROOM ||
                     // Make sure the person who sent the packet is the host
                     this.ownerId !== sender.id ||
                     // Make sure the setting ID that was sent is valid
@@ -221,8 +223,8 @@ class Lobby extends events {
 
             case Packets.DRAW: {
                 if(
-                    this.state.drawer?.id !== sender.id ||
-                    this.state.id !== GameState.START_DRAW
+                    this.state.id !== GameState.START_DRAW ||
+                    this.state.drawer?.id !== sender.id
                 ) break;
 
                 this.state.drawCommands.push(...packet.data);
@@ -233,8 +235,8 @@ class Lobby extends events {
 
             case Packets.CLEAR_CANVAS: {
                 if(
-                    this.state.drawer?.id !== sender.id ||
-                    this.state.id !== GameState.START_DRAW
+                    this.state.id !== GameState.START_DRAW || 
+                    this.state.drawer?.id !== sender.id
                 ) break;
 
                 this.state.drawCommands = [];
@@ -245,8 +247,8 @@ class Lobby extends events {
 
             case Packets.START_GAME: {
                 if(
-                    this.ownerId !== sender.id ||
-                    this.state.id !== GameState.IN_GAME_WAITING_ROOM
+                    this.state.id !== GameState.IN_GAME_WAITING_ROOM ||
+                    this.ownerId !== sender.id
                 ) break;
 
                 if(this.players.size < 2) {
