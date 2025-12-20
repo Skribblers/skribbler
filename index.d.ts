@@ -95,7 +95,7 @@ declare module "skribbler" {
 		START_DRAW,
 		DRAW_RESULTS,
 		GAME_RESULTS,
-		IN_GAME_WAITING_ROOM
+		PRIVATE_LOBBY_SETUP
 	}
 
 	export enum GameStartError {

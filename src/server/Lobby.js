@@ -54,9 +54,9 @@ class Lobby extends events {
         // @ts-expect-error
         this.settings[Settings.LANGUAGE] = options.language ?? Language.ENGLISH;
 
-        // if(this.lobbyType === LobbyType.PRIVATE) this.state._inGameWaitingRoom();
+        // if(this.lobbyType === LobbyType.PRIVATE) this.state._privateLobbySetup();
 
-        this.state._inGameWaitingRoom();
+        this.state._privateLobbySetup();
     }
 
     /**
@@ -194,7 +194,7 @@ class Lobby extends events {
                 // If the packet fails verification, then we resend the proper setting back to the client to avoid the client from having desynced settings
                 if(
                     // Lobby settings can only be updated in the waiting room
-                    this.state.id !== GameState.IN_GAME_WAITING_ROOM ||
+                    this.state.id !== GameState.PRIVATE_LOBBY_SETUP ||
                     // Make sure the person who sent the packet is the host
                     this.ownerId !== sender.id ||
                     // Make sure the setting ID that was sent is valid
@@ -247,7 +247,7 @@ class Lobby extends events {
 
             case Packets.START_GAME: {
                 if(
-                    this.state.id !== GameState.IN_GAME_WAITING_ROOM ||
+                    this.state.id !== GameState.PRIVATE_LOBBY_SETUP ||
                     this.ownerId !== sender.id
                 ) break;
 

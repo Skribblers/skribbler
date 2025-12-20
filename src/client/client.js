@@ -386,7 +386,7 @@ class Client extends events {
 						}
 
 						// When a private lobby's game ends, reset all the player's scores
-						case GameState.IN_GAME_WAITING_ROOM: {
+						case GameState.PRIVATE_LOBBY_SETUP: {
 							this.canvas.drawCommands = [];
 							this.round = 0;
 

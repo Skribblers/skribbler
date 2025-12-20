@@ -76,7 +76,7 @@ class LobbyState {
             case GameState.WAITING_FOR_PLAYERS:
             case GameState.GAME_STARTING_SOON:
             case GameState.CURRENT_ROUND:
-            case GameState.IN_GAME_WAITING_ROOM:
+            case GameState.PRIVATE_LOBBY_SETUP:
                 state.data = 0;
                 break;
 
@@ -214,8 +214,8 @@ class LobbyState {
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
     }
 
-    _inGameWaitingRoom() {
-        this.id = GameState.IN_GAME_WAITING_ROOM;
+    _privateLobbySetup() {
+        this.id = GameState.PRIVATE_LOBBY_SETUP;
         this.time = 0;
 
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());

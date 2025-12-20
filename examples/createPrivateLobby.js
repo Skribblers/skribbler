@@ -13,7 +13,7 @@ client.on("playerJoin", (player) => {
 	console.log(`${player.name} has joined the lobby`);
 
 	// If we are currently in the in game waiting room, then start the game
-	if(client.state === GameState.IN_GAME_WAITING_ROOM) client.startGame();
+	if(client.state === GameState.PRIVATE_LOBBY_SETUP) client.startGame();
 });
 
 client.on("text", (data) => {

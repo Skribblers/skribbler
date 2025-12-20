@@ -89,7 +89,7 @@ const GameState = {
     "START_DRAW": 4,
     "DRAW_RESULTS": 5,
     "GAME_RESULTS": 6,
-    "IN_GAME_WAITING_ROOM": 7
+    "PRIVATE_LOBBY_SETUP": 7
 };
 
 const GameStartError = {
