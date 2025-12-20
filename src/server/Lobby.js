@@ -3,24 +3,13 @@ const events = require("events");
 const crypto = require("crypto");
 const { LobbyState } = require("./LobbyState.js");
 const { ServerPlayer } = require("./ServerPlayer.js");
-const { Language, Packets, LobbyType, GameState, Settings, SettingsMinValue, SettingsMaxValue, WordMode, LeaveReason, GameStartError } = require("../constants.js");
+const { Language, Packets, LobbyType, GameState, SettingsMinValue, SettingsMaxValue, WordMode, LeaveReason, GameStartError } = require("../constants.js");
 
 // eslint-disable-next-line no-unused-vars
 const { Socket } = require("socket.io");
 
 class Lobby extends events {
     ownerId = -1;
-
-    settings = {
-        0: null,
-        1: 12,
-        2: 90,
-        3: 3,
-        4: 3,
-        5: 3,
-        6: WordMode.NORMAL,
-        7: 0
-    }
 
     /**
      * @type {Map<Number, ServerPlayer>}
@@ -33,6 +22,10 @@ class Lobby extends events {
     sidMap = new Map();
     _playerCounter = 0;
 
+    /**
+     * @description A list of IPs that are blocked from joining this lobby
+     * @type {Set<String>}
+     */
     blockedIps = new Set();
 
     state = new LobbyState(this);
@@ -51,8 +44,17 @@ class Lobby extends events {
 
         this.id = options.id ?? crypto.randomBytes(5).toString("base64url");
         this.lobbyType = options.type ?? LobbyType.PUBLIC;
-        // @ts-expect-error
-        this.settings[Settings.LANGUAGE] = options.language ?? Language.ENGLISH;
+
+        this.settings = {
+            0: options.language ?? Language.ENGLISH,
+            1: 12,
+            2: 90,
+            3: 3,
+            4: 3,
+            5: 3,
+            6: WordMode.NORMAL,
+            7: 0
+        }
 
         // if(this.lobbyType === LobbyType.PRIVATE) this.state._privateLobbySetup();
 
@@ -99,7 +101,7 @@ class Lobby extends events {
             me: player.id,
             owner: this.ownerId,
             users: players,
-            round: 0,
+            round: this.state.round,
             state: this.state._currentStateData()
         });
 
