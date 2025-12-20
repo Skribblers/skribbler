@@ -48,10 +48,10 @@ class Lobby extends events {
         this.settings = {
             0: options.language ?? Language.ENGLISH,
             1: 12,
-            2: 90,
+            2: 80,
             3: 3,
             4: 3,
-            5: 3,
+            5: 2,
             6: WordMode.NORMAL,
             7: 0
         }
@@ -99,7 +99,8 @@ class Lobby extends events {
             me: player.id,
             owner: this.ownerId,
             users: players,
-            round: this.state.round,
+            // Rounds are zero-indexed, if round 0 was sent to the client then the client percieves it as round 1.
+            round: this.state.round - 1,
             state: this.state._currentStateData()
         });
 
@@ -283,7 +284,7 @@ class Lobby extends events {
                     return;
                 }
 
-                this.state.startGame();
+                this.state._newRound();
                 break;
             }
 

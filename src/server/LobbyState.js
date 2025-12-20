@@ -62,6 +62,7 @@ class LobbyState {
     constructor(lobby, type) {
         this.lobby = lobby
 
+        this.type = type;
         this.id = type === LobbyType.PUBLIC ? GameState.WAITING_FOR_PLAYERS : GameState.PRIVATE_LOBBY_SETUP;
     }
 
@@ -79,13 +80,13 @@ class LobbyState {
             case GameState.GAME_STARTING_SOON:
             case GameState.CURRENT_ROUND:
             case GameState.PRIVATE_LOBBY_SETUP:
-                state.data = 0;
+                state.data = this.round - 1;
                 break;
 
             case GameState.USER_PICKING_WORD:
                 state.data = {
                     id: this.drawer?.id
-                }
+                };
                 break;
             
             case GameState.START_DRAW:
@@ -94,7 +95,7 @@ class LobbyState {
                     word: [ this.word.length ],
                     hints: [],
                     drawCommands: this.drawCommands
-                }
+                };
                 break;
 
             case GameState.DRAW_RESULTS:
@@ -102,8 +103,11 @@ class LobbyState {
                     reason: this.drawResultsReason,
                     word: this.word,
                     scores: []
-                }
+                };
                 break;
+
+            case GameState.GAME_RESULTS:
+                state.data = [];
         }
 
         return state;
@@ -123,18 +127,28 @@ class LobbyState {
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
 
         this._timeout = setTimeout(() => {
-            this.startGame();
+            this._newRound();
         }, this.time * 1000);
     }
 
-    /**
-     * @param {Number} [round]
-     */
-    _newRound(round) {
+    _newRound() {
         this.id = GameState.CURRENT_ROUND;
         this.time = 3;
+        this.round++;
 
-        round ??= this.round;
+        // Reset votekicks
+        this.votekicks.clear();
+
+        // Get a list of all players who should draws
+        for(const obj of this.lobby.players) {
+            const player = obj[1];
+
+            player.votekicks = 0;
+
+            this.drawerQueue.push(player);
+        }
+
+        this.drawerQueue.reverse();
 
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
 
@@ -214,6 +228,25 @@ class LobbyState {
         if(this.word === "") this.word = this.availableWords[0];
 
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
+
+        this._timeout = setTimeout(() => {
+            if(this.round === this.lobby.settings[Settings.MAX_ROUNDS]) return this._gameResults();
+
+            this.drawerQueue.length === 0 ? this._newRound() : this._chooseWord();
+        }, this.time * 1000);
+    }
+
+    _gameResults() {
+        this.id = GameState.GAME_RESULTS;
+        this.time = 5;
+
+        this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData);
+
+        this._timeout = setTimeout(() => {
+            this.round = 0;
+
+            this.type === LobbyType.PUBLIC ? this._newRound() : this._privateLobbySetup();
+        }, this.time * 1000);
     }
 
     _privateLobbySetup() {
@@ -221,23 +254,6 @@ class LobbyState {
         this.time = 0;
 
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
-    }
-
-    startGame() {
-        // Reset votekicks
-        this.votekicks.clear();
-
-        for(const obj of this.lobby.players) {
-            const player = obj[1];
-
-            player.votekicks = 0;
-
-            this.drawerQueue.push(player);
-        }
-
-        this.drawerQueue.reverse();
-
-        this._newRound();
     }
 
     /**
