@@ -1,5 +1,5 @@
 // @ts-check
-const { Packets, Settings, GameState } = require("../constants.js");
+const { Packets, Settings, GameState, DrawResultsReason } = require("../constants.js");
 
 // eslint-disable-next-line no-unused-vars
 const { ServerPlayer } = require("./ServerPlayer.js");
@@ -44,6 +44,11 @@ class LobbyState {
      * @type {Array<Array<Number>>}
      */
     drawCommands = [];
+    /**
+     * @description The reason why the draw finished
+     * @type {Number | null}
+     */
+    drawResultsReason = null;
 
     /**
      * @type {any}
@@ -91,6 +96,17 @@ class LobbyState {
                         word: [ this.word.length ],
                         hints: [],
                         drawCommands: this.drawCommands
+                    }
+                }
+
+            case GameState.DRAW_RESULTS:
+                return {
+                    id: this.id,
+                    time: this.time,
+                    data: {
+                        reason: this.drawResultsReason,
+                        word: this.word,
+                        scores: []
                     }
                 }
             
@@ -164,6 +180,8 @@ class LobbyState {
     }
 
     _startDraw() {
+        clearTimeout(this._timeout);
+
         this.id = GameState.START_DRAW;
         this.time = this.lobby.settings[Settings.MAX_DRAW_TIME];
 
@@ -181,11 +199,26 @@ class LobbyState {
 
         this.lobby.broadcast(drawer.socket, Packets.UPDATE_GAME_STATE, this._currentStateData());
 
-        /*
         this._timeout = setTimeout(() => {
-
+            this._drawResults(DrawResultsReason.TIME_IS_UP);
         }, this.time * 1000);
-        */
+    }
+
+    /**
+     * @param {Number} reason - Reason why the draw should be finished
+     */
+    _drawResults(reason) {
+        clearTimeout(this._timeout);
+
+        this.id = GameState.DRAW_RESULTS;
+        this.time = 5;
+
+        this.drawer = null;
+        this.drawResultsReason = reason;
+        // Automatically select a word if the drawer did not select one yet
+        if(this.word === "") this.word = this.availableWords[0];
+
+        this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
     }
 
     _inGameWaitingRoom() {

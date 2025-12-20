@@ -1,6 +1,6 @@
 // @ts-check
 const events = require("events");
-const { Packets, LeaveReason } = require("../constants.js");
+const { Packets, LeaveReason, DrawResultsReason } = require("../constants.js");
 
 // eslint-disable-next-line no-unused-vars
 const { Socket } = require("socket.io");
@@ -54,6 +54,10 @@ class ServerPlayer extends events {
         return this.lobby.ownerId === this.id
     }
 
+    get isDrawer() {
+        return this.lobby.state.drawer?.id === this.id;
+    }
+
     /**
      * @name send
      * @description Send a data packet to the player
@@ -102,10 +106,11 @@ class ServerPlayer extends events {
         // If the player who was removed is the host, then assign a new host
         if(this.isHost) {
             const obj = this.lobby.players.entries().next().value;
-            if(!obj) return;
-
-            obj[1].setHost();
+            if(obj) obj[1].setHost();
         }
+
+        // If the player who was removed is the drawer, make the draw end
+        if(this.isDrawer) this.lobby.state._drawResults(DrawResultsReason.DRAWER_LEFT);
     }
 
     /**

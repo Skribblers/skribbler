@@ -189,8 +189,7 @@ class Lobby extends events {
             }
 
             case Packets.UPDATE_SETTINGS: {
-                const settingId = packet.data.id;
-                const settingVal = packet.data.val;
+                const { id: settingId, val: settingVal } = packet.data;
 
                 // If the packet fails verification, then we resend the proper setting back to the client to avoid the client from having desynced settings
                 if(
