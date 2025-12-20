@@ -67,52 +67,44 @@ class LobbyState {
      * @description Get data for the current state that should be sent in the LobbyData packet
      */
     _currentStateData() {
+        /**
+         * @type {any}
+         */
+        const state = { id: this.id, time: this.time };
+
         switch(this.id) {
             case GameState.WAITING_FOR_PLAYERS:
             case GameState.GAME_STARTING_SOON:
             case GameState.CURRENT_ROUND:
             case GameState.IN_GAME_WAITING_ROOM:
-                return {
-                    id: this.id,
-                    time: this.time,
-                    data: 0
-                }
+                state.data = 0;
+                break;
 
             case GameState.USER_PICKING_WORD:
-                return {
-                    id: this.id,
-                    time: this.time,
-                    data: {
-                        id: this.drawer?.id
-                    }
+                state.data = {
+                    id: this.drawer?.id
                 }
+                break;
             
             case GameState.START_DRAW:
-                return {
-                    id: this.id,
-                    time: this.time,
-                    data: {
-                        id: this.drawer?.id,
-                        word: [ this.word.length ],
-                        hints: [],
-                        drawCommands: this.drawCommands
-                    }
+                state.data = {
+                    id: this.drawer?.id,
+                    word: [ this.word.length ],
+                    hints: [],
+                    drawCommands: this.drawCommands
                 }
+                break;
 
             case GameState.DRAW_RESULTS:
-                return {
-                    id: this.id,
-                    time: this.time,
-                    data: {
-                        reason: this.drawResultsReason,
-                        word: this.word,
-                        scores: []
-                    }
+                state.data = {
+                    reason: this.drawResultsReason,
+                    word: this.word,
+                    scores: []
                 }
-            
-            default:
-                return;
+                break;
         }
+
+        return state;
     }
 
     _waitForPlayers() {
