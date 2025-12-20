@@ -139,16 +139,14 @@ class LobbyState {
         // Reset votekicks
         this.votekicks.clear();
 
-        // Get a list of all players who should draws
         for(const obj of this.lobby.players) {
             const player = obj[1];
 
             player.votekicks = 0;
 
-            this.drawerQueue.push(player);
+            // Get a list of all players who are going to draw in this round
+            this.drawerQueue.unshift(player);
         }
-
-        this.drawerQueue.reverse();
 
         this.lobby.send(Packets.UPDATE_GAME_STATE, this._currentStateData());
 
@@ -192,6 +190,8 @@ class LobbyState {
 
         this.id = GameState.START_DRAW;
         this.time = this.lobby.settings[Settings.MAX_DRAW_TIME];
+        this.votekicks.clear();
+        this.voters.clear();
         this.drawCommands = [];
 
         const drawer = this.drawer;
