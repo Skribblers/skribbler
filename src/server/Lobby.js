@@ -126,7 +126,7 @@ class Lobby extends events {
 
         switch(packet.id) {
             case Packets.HOST_KICK: {
-                if(this.ownerId !== sender.id) return;
+                if(!sender.isHost) break;
 
                 const player = this.players.get(packet.data);
                 if(!player) return;
@@ -136,7 +136,7 @@ class Lobby extends events {
             }
 
             case Packets.HOST_BAN: {
-                if(this.ownerId !== sender.id) return;
+                if(!sender.isHost) break;
 
                 const player = this.players.get(packet.data);
                 if(!player) return;
@@ -175,7 +175,8 @@ class Lobby extends events {
                     typeof packet.data !== "number" ||
                     this.state.id !== GameState.START_DRAW ||
                     // Don't let the drawer vote for their own drawing
-                    this.state.drawer?.id === sender.id ||
+                    sender.isDrawer ||
+                    // Make sure the player cant vote multiple times
                     this.state.voters.has(sender.id)
                 ) break;
 
@@ -196,7 +197,7 @@ class Lobby extends events {
                     // Lobby settings can only be updated in the waiting room
                     this.state.id !== GameState.PRIVATE_LOBBY_SETUP ||
                     // Make sure the person who sent the packet is the host
-                    this.ownerId !== sender.id ||
+                    !sender.isHost ||
                     // Make sure the setting ID that was sent is valid
                     Object.hasOwn(this.settings, settingId) ||
                     // Make sure the setting value is within bounds
@@ -214,7 +215,7 @@ class Lobby extends events {
             case Packets.SELECT_WORD: {
                 if(
                     this.state.id !== GameState.USER_PICKING_WORD ||
-                    this.state.drawer?.id !== sender.id
+                    !sender.isDrawer
                 ) break;
 
                 this.state.chooseWord(packet.data);
@@ -224,7 +225,7 @@ class Lobby extends events {
             case Packets.DRAW: {
                 if(
                     this.state.id !== GameState.START_DRAW ||
-                    this.state.drawer?.id !== sender.id
+                    !sender.isDrawer
                 ) break;
 
                 this.state.drawCommands.push(...packet.data);
@@ -236,7 +237,7 @@ class Lobby extends events {
             case Packets.CLEAR_CANVAS: {
                 if(
                     this.state.id !== GameState.START_DRAW || 
-                    this.state.drawer?.id !== sender.id
+                    !sender.isDrawer
                 ) break;
 
                 this.state.drawCommands = [];
@@ -245,10 +246,23 @@ class Lobby extends events {
                 break;
             }
 
+            case Packets.UNDO: {
+                if(
+                    typeof packet.data !== "number" ||
+                    this.state.id !== GameState.START_DRAW ||
+                    !sender.isDrawer
+                ) break;
+
+                this.state.drawCommands.splice(packet.data);
+
+                this.broadcast(socket, Packets.UNDO, packet.data);
+                break;
+            }
+
             case Packets.START_GAME: {
                 if(
                     this.state.id !== GameState.PRIVATE_LOBBY_SETUP ||
-                    this.ownerId !== sender.id
+                    !sender.isHost
                 ) break;
 
                 if(this.players.size < 2) {

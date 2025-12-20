@@ -51,7 +51,7 @@ class LobbyState {
     drawResultsReason = null;
 
     /**
-     * @type {any}
+     * @type {NodeJS.Timeout | undefined}
      */
     _timeout;
 

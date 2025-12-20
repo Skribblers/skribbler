@@ -54,6 +54,11 @@ class ServerPlayer extends events {
         return this.lobby.ownerId === this.id
     }
 
+    /**
+     * @name isDrawer
+     * @description Return whether or not the player is the current drawer
+     * @readonly
+     */
     get isDrawer() {
         return this.lobby.state.drawer?.id === this.id;
     }
