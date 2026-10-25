@@ -1,5 +1,5 @@
 // @ts-check
-const { Client, DrawBuilder, GameState, Colors, BrushSize } = require("skribbler");
+import { Client, DrawBuilder, GameState, Colors, BrushSize } from "skribbler";
 
 const client = new Client({
 	name: "Skribbler",

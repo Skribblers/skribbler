@@ -216,7 +216,7 @@ declare module "skribbler" {
 		lobbyId?: String
 		lobbyType?: LobbyType
 
-		settings: LobbySettings
+		settings: LobbySettings | undefined
 
 		state?: Number
 		round: Number
@@ -246,7 +246,7 @@ declare module "skribbler" {
 		selectWord(word: String | Number): void
 		sendMessage(msg: String): void
 		disconnect(): void
-		on(event: ClientEvents, listener: Function): this
+		on(event: any, listener: Function): this
 	}
 
 	export class ClientPlayer {

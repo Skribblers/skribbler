@@ -1,4 +1,4 @@
 // Run all the tests
-require("./drawbuilder.js");
-require("./reportbuilder.js");
-require("./relay.js");
+import "./drawbuilder.js";
+import "./reportbuilder.js";
+import "./relay.js";

@@ -1,17 +1,9 @@
 // @ts-check
-const { Client, ClientPlayer } = require("./src/client/client.js");
-const { Proxy, ProxyPlayer } = require("./src/proxy/proxy.js");
-const { DrawBuilder } = require("./src/builders/DrawBuilder.js");
-const { ReportBuilder } = require("./src/builders/ReportBuilder.js");
-const Constants = require("./src/constants.js");
+export { Client } from "./src/client/client.js";
+export { ClientPlayer } from "./src/client/ClientPlayer.js";
+export { Proxy } from "./src/proxy/proxy.js";
+export { ProxyPlayer } from "./src/proxy/ProxyPlayer.js";
+export { DrawBuilder } from "./src/builders/DrawBuilder.js";
+export { ReportBuilder } from "./src/builders/ReportBuilder.js";
 
-module.exports = {
-	Client,
-	ClientPlayer,
-	Proxy,
-	ProxyPlayer,
-	DrawBuilder,
-	ReportBuilder,
-
-	...Constants
-};
+export { Packets, Language, LobbyType, LeaveReason, JoinError, GameState, GameStartError, DrawResultsReason, WordMode, Settings, SettingsMinValue, SettingsMaxValue, UserFlags, Vote, ReportReasons, Tools, BrushSize, Colors } from "./src/constants.js";

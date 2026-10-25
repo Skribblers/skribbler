@@ -1,14 +1,14 @@
 // @ts-check
-const events = require("events");
-const { ProxyPlayer } = require("./ProxyPlayer.js");
-const { getServerUri } = require("../auth.js");
+import events from "events";
+import { ProxyPlayer } from "./ProxyPlayer.js";
+import { getServerUri } from "../auth.js";
 
 // Web server
-const http = require("http");
-const { Server } = require("socket.io");
-const { io: clientIo } = require("socket.io-client");
+import http from "http";
+import { Server } from "socket.io";
+import clientIo from "socket.io-client";
 
-class Proxy extends events {
+export class Proxy extends events {
 	/**
 	 * @class
 	 * @param {Object} [options] - Options the client should use
@@ -35,16 +35,16 @@ class Proxy extends events {
 
 		this.didInit = true;
 
-		const server = http.createServer();
+		this.server = http.createServer();
 
-		const io = new Server(server, {
+		this.io = new Server(this.server, {
 			cors: {
 				origin: ["http://skribbl.io", "https://skribbl.io"],
 				methods: ["GET", "POST"]
 			}
 		});
 
-		io.on("connection", (socket) => {
+		this.io.on("connection", (socket) => {
 			let loggedIn = false;
 			socket.on("login", async (loginData) => {
 				// Make sure the login packet cannot be spammed in the same socket connection
@@ -86,13 +86,13 @@ class Proxy extends events {
 		// @ts-expect-error
 		const port = this.options.port ?? 3000;
 
-		server.listen(port, () => {
+		this.server.listen(port, () => {
 			console.log(`Started proxy server on http://localhost:${port}`);
 		});
 	}
-}
 
-module.exports = {
-	Proxy,
-	ProxyPlayer
-};
+	close() {
+		this.server?.close();
+		this.io?.close();
+	}
+}

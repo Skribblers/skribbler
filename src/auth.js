@@ -1,6 +1,6 @@
 // @ts-check
-const fetch = require("node-fetch");
-const { io } = require("socket.io-client");
+import fetch from "node-fetch";
+import { io } from "socket.io-client";
 
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
 
@@ -10,12 +10,13 @@ const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
  * @param {Number} [options.language] - The langauge to look for servers with. Not needed if a lobby code is set
  * @param {Object} [options.httpHeaders] - HTTP headers to use
 */
-async function getServerUri(options = {}) {
+export async function getServerUri(options = {}) {
 	// Get server URI
 	const body = options.lobbyCode ? `id=${options.lobbyCode}` : `lang=${options.language}`;
 
 	const request = await fetch("https://skribbl.io/api/play", {
 		method: "POST",
+		// @ts-expect-error
 		headers: {
 			"User-Agent": userAgent,
 			"Accept": "*/*",
@@ -54,7 +55,7 @@ async function getServerUri(options = {}) {
  * @param {String} [options.serverUrl] - A custom server URL to connect to
  * @param {Object} [options.socketOptions] - Options to use for socket.io-client
 */
-async function joinLobby(options = {}) {
+export async function joinLobby(options = {}) {
 	let serverUrl = options.serverUrl;
 	let path;
 
@@ -98,8 +99,3 @@ async function joinLobby(options = {}) {
 
 	return socket;
 }
-
-module.exports = {
-	joinLobby,
-	getServerUri
-};

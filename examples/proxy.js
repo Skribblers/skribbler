@@ -1,5 +1,5 @@
 // @ts-check
-const { Proxy, Packets } = require("skribbler");
+import { Proxy, Packets } from "skribbler";
 
 const proxy = new Proxy();
 

@@ -1,11 +1,10 @@
-const { DrawBuilder } = require("../src/builders/DrawBuilder.js");
-const { Tools, Colors, BrushSize } = require("../src/constants.js");
+import { DrawBuilder } from "../src/builders/DrawBuilder.js";
+import { Tools, Colors, BrushSize } from "../src/constants.js";
 
 const draw = new DrawBuilder();
 
 if(draw.toValue().length !== 0) {
-    console.error("DrawBuilder by default should have no draw commands");
-    process.exit(1);
+    throw new Error("DrawBuilder by default should have no draw commands");
 }
 
 // Check if the fill command results in the predicted value
@@ -18,8 +17,7 @@ for(const i in expectedDraw) {
     if(expectedDraw[i] === actualDraw[i]) continue;
 
     // If the two arrays do not match, then we know something is up
-    console.error(`Draw index ${i} does not match between the actual draw command and the expected draw command. ${actualDraw[i]} vs ${expectedDraw[i]}`);
-    process.exit(1);
+    throw new Error(`Draw index ${i} does not match between the actual draw command and the expected draw command. ${actualDraw[i]} vs ${expectedDraw[i]}`);
 }
 
 // Check if the fill command results in the predicted value
@@ -32,8 +30,7 @@ for(const i in expectedFill) {
     if(expectedFill[i] === actualFill[i]) continue;
 
     // If the two arrays do not match, then we know something is up
-    console.error(`Fill index ${i} does not match between the actual fill command and the expected draw command. ${actualFill[i]} vs ${expectedFill[i]}`);
-    process.exit(1);
+    throw new Error(`Fill index ${i} does not match between the actual fill command and the expected draw command. ${actualFill[i]} vs ${expectedFill[i]}`);
 }
 
 console.log("DrawBuilder tests were successful");

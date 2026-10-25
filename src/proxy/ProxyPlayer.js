@@ -1,6 +1,11 @@
-const events = require("events");
+// @ts-check
+import events from "events";
 
-class ProxyPlayer extends events {
+export class ProxyPlayer extends events {
+	/**
+	 * @param {import("socket.io").Socket} client
+     * @param {import("socket.io-client").Socket} server
+	 */
 	constructor(client, server) {
 		super();
 
@@ -74,7 +79,3 @@ class ProxyPlayer extends events {
 		this.upstream.disconnect();
 	}
 }
-
-module.exports = {
-	ProxyPlayer
-};

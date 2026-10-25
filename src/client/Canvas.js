@@ -1,8 +1,8 @@
 // @ts-check
-const { Packets } = require("../constants.js");
-const { DrawBuilder } = require("../builders/DrawBuilder.js");
+import { Packets } from "../constants.js";
+import { DrawBuilder } from "../builders/DrawBuilder.js";
 
-class Canvas {
+export class Canvas {
     client;
 
     /**
@@ -11,7 +11,7 @@ class Canvas {
     drawCommands = [];
 
     /**
-     * @param {any} client
+     * @param {import("skribbler").Client} client
      */
     constructor(client) {
         this.client = client;
@@ -69,7 +69,3 @@ class Canvas {
 		this.client.sendPacket(Packets.UNDO, id);
 	}
 }
-
-module.exports = {
-    Canvas
-};

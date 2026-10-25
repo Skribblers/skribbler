@@ -1,8 +1,9 @@
-const crypto = require("crypto");
-const { Client, Proxy, Packets } = require("skribbler");
+import crypto from "crypto";
+import { Client, Proxy, Packets } from "skribbler";
 
 const random1 = crypto.randomBytes(16).toString("hex");
 const random2 = crypto.randomBytes(16).toString("hex");
+let didSucceed = false;
 
 const proxy = new Proxy({
 	port: 5732
@@ -30,17 +31,25 @@ client.on("connect", () => {
 client.on("text", (data) => {
 	if(data.msg === `${random1}${random2}`) {
 		console.log(`Successfully received random string!`);
-		process.exit(0);
+		didSucceed = true;
+
+		proxy.close();
+		client.disconnect();
 	}
 });
 
-setInterval(() => {
-	console.error(`Did not recieve "${random1}${random2}" after 10000ms`);
-	process.exit(1);
-}, 10000);
+setTimeout(() => {
+	if(didSucceed) return;
+
+	client.disconnect();
+	proxy.close();
+	throw new Error(`Did not recieve "${random1}${random2}" after 5000ms`);
+}, 5000);
+
 
 client.on("disconnect", (reason) => {
-	console.error("Bot got kicked.");
-	console.error(reason);
-	process.exit(1);
+	if(didSucceed) return;
+
+	proxy.close();
+	throw new Error(`Bot was disconnected due to ${reason}`);
 });

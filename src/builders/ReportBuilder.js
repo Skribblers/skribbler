@@ -1,6 +1,7 @@
-const { ReportReasons } = require("../constants.js");
+// @ts-check
+import { ReportReasons } from "../constants.js";
 
-class ReportBuilder {
+export class ReportBuilder {
     bitfield = 0;
 
     get inappropriateBehavior() {
@@ -42,8 +43,4 @@ class ReportBuilder {
     toValue() {
         return this.bitfield;
     }
-}
-
-module.exports = {
-    ReportBuilder
 }

@@ -1,8 +1,8 @@
 // @ts-check
-const { ReportBuilder } = require("../builders/ReportBuilder.js");
-const { Packets, UserFlags } = require("../constants.js");
+import { ReportBuilder } from "../builders/ReportBuilder.js";
+import { Packets, UserFlags } from "../constants.js";
 
-class ClientPlayer {
+export class ClientPlayer {
     client;
 
     id = 0;
@@ -18,7 +18,7 @@ class ClientPlayer {
 
     /**
 	 * @param {any} player
-     * @param {any} client
+     * @param {import("skribbler").Client} client
 	 */
     constructor(player, client) {
         this.id = player.id;
@@ -88,7 +88,3 @@ class ClientPlayer {
         });
 	}
 }
-
-module.exports = {
-    ClientPlayer
-};

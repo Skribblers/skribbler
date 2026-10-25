@@ -1,4 +1,4 @@
-const Packets = {
+export const Packets = {
     "PLAYER_JOIN": 1,
     "PLAYER_LEAVE": 2,
     "HOST_KICK": 3,
@@ -28,7 +28,7 @@ const Packets = {
     "UPDATE_NAME": 90
 };
 
-const Language = {
+export const Language = {
     "ENGLISH": 0,
     "GERMAN": 1,
     "BULGARIAN": 2,
@@ -59,18 +59,18 @@ const Language = {
     "TURKISH": 27
 }
 
-const LobbyType = {
+export const LobbyType = {
     "PUBLIC": 0,
     "PRIVATE": 1
 };
 
-const LeaveReason = {
+export const LeaveReason = {
     "DISCONNECT": 0,
     "KICKED": 1,
     "BANNED": 2
 };
 
-const JoinError = {
+export const JoinError = {
     "ROOM_NOT_FOUND": 1,
     "ROOM_FULL": 2,
     "KICK_COOLDOWN": 3,
@@ -81,7 +81,7 @@ const JoinError = {
     "KICKED_TOO_MANY_TIMES": 300
 };
 
-const GameState = {
+export const GameState = {
     "WAITING_FOR_PLAYERS": 0,
     "GAME_STARTING_SOON": 1,
     "CURRENT_ROUND": 2,
@@ -89,27 +89,27 @@ const GameState = {
     "START_DRAW": 4,
     "DRAW_RESULTS": 5,
     "GAME_RESULTS": 6,
-    "IN_GAME_WAITING_ROOM": 7
+    "PRIVATE_LOBBY_SETUP": 7
 };
 
-const GameStartError = {
+export const GameStartError = {
     "NOT_ENOUGH_PLAYERS": 0,
     "SERVER_RESTART_SOON": 100
 };
 
-const DrawResultsReason = {
+export const DrawResultsReason = {
     "EVERYONE_GUESSED": 0,
     "TIME_IS_UP": 1,
     "DRAWER_LEFT": 2
 };
 
-const WordMode = {
+export const WordMode = {
     "NORMAL": 0,
     "HIDDEN": 1,
     "COMBINATION": 2
 };
 
-const Settings = {
+export const Settings = {
     "LANGUAGE": 0,
     "MAX_PLAYER_COUNT": 1,
     "MAX_DRAW_TIME": 2,
@@ -120,7 +120,7 @@ const Settings = {
     "USE_CUSTOM_WORDS_ONLY": 7
 };
 
-const SettingsMinValue = {
+export const SettingsMinValue = {
     0: 0,
     1: 2,
     2: 15,
@@ -131,7 +131,7 @@ const SettingsMinValue = {
     7: 0
 };
 
-const SettingsMaxValue = {
+export const SettingsMaxValue = {
     0: 27,
     1: 20,
     2: 240,
@@ -142,27 +142,27 @@ const SettingsMaxValue = {
     7: 1
 };
 
-const UserFlags = {
+export const UserFlags = {
     "ADMIN": 4
 };
 
-const Vote = {
+export const Vote = {
     "DISLIKE": 0,
     "LIKE": 1
 }
 
-const ReportReasons = {
+export const ReportReasons = {
     "INAPPROPRIATE_BEHAVIOR": 1,
     "SPAM": 2,
     "CHEATING": 4
 };
 
-const Tools = {
+export const Tools = {
     "PENCIL": 0,
     "FILL": 1
 };
 
-const BrushSize = {
+export const BrushSize = {
     "EXTRA_SMALL": 4,
     "SMALL": 10,
     "MEDIUM": 20,
@@ -170,7 +170,7 @@ const BrushSize = {
     "EXTRA_LARGE": 40
 };
 
-const Colors = {
+export const Colors = {
     "WHITE": 0,
     "BLACK": 1,
     "GRAY": 2,
@@ -197,25 +197,4 @@ const Colors = {
     "DARK_PEACH": 23,
     "BROWN": 24,
     "DARK_BROWN": 25
-};
-
-module.exports = {
-    Packets,
-    Language,
-    LobbyType,
-    LeaveReason,
-    JoinError,
-    GameState,
-    GameStartError,
-    DrawResultsReason,
-    WordMode,
-    Settings,
-    SettingsMinValue,
-    SettingsMaxValue,
-    UserFlags,
-    Vote,
-    ReportReasons,
-    Tools,
-    BrushSize,
-    Colors,
 };

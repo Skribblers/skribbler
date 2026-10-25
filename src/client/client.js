@@ -1,13 +1,12 @@
 // @ts-check
-const events = require("events");
-const { ClientPlayer } = require("./ClientPlayer.js");
-const { Canvas } = require("./Canvas.js");
-const { joinLobby } = require("../auth.js");
+import events from "events";
+import { ClientPlayer } from "./ClientPlayer.js";
+import { Canvas } from "./Canvas.js";
+import { joinLobby } from "../auth.js";
 
-// eslint-disable-next-line no-unused-vars
-const { Packets, Language, GameState, Vote } = require("../constants.js");
+import { Packets, Language, GameState } from "../constants.js";
 
-class Client extends events {
+export class Client extends events {
 	/**
 	 * @class
 	 * @param {Object} [options] - Options the client should use
@@ -41,16 +40,8 @@ class Client extends events {
 		this.init();
 	}
 
-	options = {};
-	socket = null;
 	connected = false;
 
-	lobbyId = null;
-	lobbyType = null;
-
-	settings = {};
-
-	state = null;
 	round = 0;
 
 	/**
@@ -75,6 +66,9 @@ class Client extends events {
 	 * @type {Array<String>}
 	 */
 	availableWords = [];
+	/**
+	 * @type {Canvas}
+	 */
 	canvas = new Canvas(this);
 	word = "";
 
@@ -83,7 +77,6 @@ class Client extends events {
 
 		const socket = await joinLobby(this.options);
 
-		// @ts-expect-error
 		this.socket = socket;
 		this.connected = true;
 
@@ -386,7 +379,7 @@ class Client extends events {
 						}
 
 						// When a private lobby's game ends, reset all the player's scores
-						case GameState.IN_GAME_WAITING_ROOM: {
+						case GameState.PRIVATE_LOBBY_SETUP: {
 							this.canvas.drawCommands = [];
 							this.round = 0;
 
@@ -408,6 +401,7 @@ class Client extends events {
 						typeof data?.val !== "number"
 					) return console.log(`Received invalid packet. ID: 12.`);
 
+					// @ts-expect-error
 					const setting = Object.keys(this.settings)[data.id];
 					if(!setting) break;
 
@@ -626,19 +620,15 @@ class Client extends events {
 	 * @throws
 	 */
 	sendPacket(id, data) {
-		if(!this.connected) throw Error("Socket isn't initialized or is disconnected");
+		if(!this.connected || !this.socket) throw Error("Socket isn't initialized or is disconnected");
 
-		// @ts-expect-error
-		this.socket.emit("data", {
-			id,
-			data
-		});
+		this.socket.emit("data", { id, data });
 	}
 
 	/**
 	 * @name vote
 	 * @description Vote on an image
-	 * @param {Vote} voteType - The type of vote
+	 * @param {Number} voteType - The type of vote
 	 * @throws
 	 */
 	vote(voteType) {
@@ -739,14 +729,8 @@ class Client extends events {
 	 * @throws
 	 */
 	disconnect() {
-		if(!this.connected) throw Error("Socket is already disconnected");
+		if(!this.connected || !this.socket) throw Error("Socket is already disconnected");
 
-		// @ts-expect-error
 		this.socket.disconnect();
 	}
 }
-
-module.exports = {
-	Client,
-	ClientPlayer
-};
