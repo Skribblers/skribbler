@@ -1,200 +1,200 @@
 export const Packets = {
-    "PLAYER_JOIN": 1,
-    "PLAYER_LEAVE": 2,
-    "HOST_KICK": 3,
-    "HOST_BAN": 4,
-    "VOTEKICK": 5,
-    "REPORT": 6,
-    "MUTE": 7,
-    "VOTE": 8,
-    "UPDATE_AVATAR": 9,
-    "LOBBY_DATA": 10,
-    "UPDATE_GAME_STATE": 11,
-    "UPDATE_SETTINGS": 12,
-    "REVEAL_HINT": 13,
-    "UPDATE_TIME": 14,
-    "PLAYER_GUESSED": 15,
-    "CLOSE_WORD": 16,
-    "SET_OWNER": 17,
-    "SELECT_WORD": 18,
-    "DRAW": 19,
-    "CLEAR_CANVAS": 20,
-    "UNDO": 21,
-    "START_GAME": 22,
-    "END_GAME": 23,
-    "TEXT": 30,
-    "GAME_START_ERROR": 31,
-    "SPAM_DETECTED": 32,
-    "UPDATE_NAME": 90
+	"PLAYER_JOIN": 1,
+	"PLAYER_LEAVE": 2,
+	"HOST_KICK": 3,
+	"HOST_BAN": 4,
+	"VOTEKICK": 5,
+	"REPORT": 6,
+	"MUTE": 7,
+	"VOTE": 8,
+	"UPDATE_AVATAR": 9,
+	"LOBBY_DATA": 10,
+	"UPDATE_GAME_STATE": 11,
+	"UPDATE_SETTINGS": 12,
+	"REVEAL_HINT": 13,
+	"UPDATE_TIME": 14,
+	"PLAYER_GUESSED": 15,
+	"CLOSE_WORD": 16,
+	"SET_OWNER": 17,
+	"SELECT_WORD": 18,
+	"DRAW": 19,
+	"CLEAR_CANVAS": 20,
+	"UNDO": 21,
+	"START_GAME": 22,
+	"END_GAME": 23,
+	"TEXT": 30,
+	"GAME_START_ERROR": 31,
+	"SPAM_DETECTED": 32,
+	"UPDATE_NAME": 90
 };
 
 export const Language = {
-    "ENGLISH": 0,
-    "GERMAN": 1,
-    "BULGARIAN": 2,
-    "CZECH": 3,
-    "DANISH": 4,
-    "DUTCH": 5,
-    "FINNISH": 6,
-    "FRENCH": 7,
-    "ESTONIAN": 8,
-    "GREEK": 9,
-    "HEBREW": 10,
-    "HUNGARIAN": 11,
-    "ITALIAN": 12,
-    "JAPANESE": 13,
-    "KOREAN": 14,
-    "LATVIAN": 15,
-    "MACEDONIAN": 16,
-    "NORWEGIAN": 17,
-    "PORTUGUESE": 18,
-    "POLISH": 19,
-    "ROMANIAN": 20,
-    "RUSSIAN": 21,
-    "SERBIAN": 22,
-    "SLOVAKIAN": 23,
-    "SPANISH": 24,
-    "SWEDISH": 25,
-    "TAGALOG": 26,
-    "TURKISH": 27
+	"ENGLISH": 0,
+	"GERMAN": 1,
+	"BULGARIAN": 2,
+	"CZECH": 3,
+	"DANISH": 4,
+	"DUTCH": 5,
+	"FINNISH": 6,
+	"FRENCH": 7,
+	"ESTONIAN": 8,
+	"GREEK": 9,
+	"HEBREW": 10,
+	"HUNGARIAN": 11,
+	"ITALIAN": 12,
+	"JAPANESE": 13,
+	"KOREAN": 14,
+	"LATVIAN": 15,
+	"MACEDONIAN": 16,
+	"NORWEGIAN": 17,
+	"PORTUGUESE": 18,
+	"POLISH": 19,
+	"ROMANIAN": 20,
+	"RUSSIAN": 21,
+	"SERBIAN": 22,
+	"SLOVAKIAN": 23,
+	"SPANISH": 24,
+	"SWEDISH": 25,
+	"TAGALOG": 26,
+	"TURKISH": 27
 }
 
 export const LobbyType = {
-    "PUBLIC": 0,
-    "PRIVATE": 1
+	"PUBLIC": 0,
+	"PRIVATE": 1
 };
 
 export const LeaveReason = {
-    "DISCONNECT": 0,
-    "KICKED": 1,
-    "BANNED": 2
+	"DISCONNECT": 0,
+	"KICKED": 1,
+	"BANNED": 2
 };
 
 export const JoinError = {
-    "ROOM_NOT_FOUND": 1,
-    "ROOM_FULL": 2,
-    "KICK_COOLDOWN": 3,
-    "BANNED_FROM_ROOM": 4,
-    "JOINING_ROOMS_TOO_QUICKLY": 5,
-    "ALREADY_CONNECTED": 100,
-    "TOO_MANY_IP_CONNECTIONS": 200,
-    "KICKED_TOO_MANY_TIMES": 300
+	"ROOM_NOT_FOUND": 1,
+	"ROOM_FULL": 2,
+	"KICK_COOLDOWN": 3,
+	"BANNED_FROM_ROOM": 4,
+	"JOINING_ROOMS_TOO_QUICKLY": 5,
+	"ALREADY_CONNECTED": 100,
+	"TOO_MANY_IP_CONNECTIONS": 200,
+	"KICKED_TOO_MANY_TIMES": 300
 };
 
 export const GameState = {
-    "WAITING_FOR_PLAYERS": 0,
-    "GAME_STARTING_SOON": 1,
-    "CURRENT_ROUND": 2,
-    "USER_PICKING_WORD": 3,
-    "START_DRAW": 4,
-    "DRAW_RESULTS": 5,
-    "GAME_RESULTS": 6,
-    "PRIVATE_LOBBY_SETUP": 7
+	"WAITING_FOR_PLAYERS": 0,
+	"GAME_STARTING_SOON": 1,
+	"CURRENT_ROUND": 2,
+	"USER_PICKING_WORD": 3,
+	"START_DRAW": 4,
+	"DRAW_RESULTS": 5,
+	"GAME_RESULTS": 6,
+	"PRIVATE_LOBBY_SETUP": 7
 };
 
 export const GameStartError = {
-    "NOT_ENOUGH_PLAYERS": 0,
-    "SERVER_RESTART_SOON": 100
+	"NOT_ENOUGH_PLAYERS": 0,
+	"SERVER_RESTART_SOON": 100
 };
 
 export const DrawResultsReason = {
-    "EVERYONE_GUESSED": 0,
-    "TIME_IS_UP": 1,
-    "DRAWER_LEFT": 2
+	"EVERYONE_GUESSED": 0,
+	"TIME_IS_UP": 1,
+	"DRAWER_LEFT": 2
 };
 
 export const WordMode = {
-    "NORMAL": 0,
-    "HIDDEN": 1,
-    "COMBINATION": 2
+	"NORMAL": 0,
+	"HIDDEN": 1,
+	"COMBINATION": 2
 };
 
 export const Settings = {
-    "LANGUAGE": 0,
-    "MAX_PLAYER_COUNT": 1,
-    "MAX_DRAW_TIME": 2,
-    "MAX_ROUNDS": 3,
-    "WORD_COUNT": 4,
-    "MAX_HINTS": 5,
-    "WORD_MODE": 6,
-    "USE_CUSTOM_WORDS_ONLY": 7
+	"LANGUAGE": 0,
+	"MAX_PLAYER_COUNT": 1,
+	"MAX_DRAW_TIME": 2,
+	"MAX_ROUNDS": 3,
+	"WORD_COUNT": 4,
+	"MAX_HINTS": 5,
+	"WORD_MODE": 6,
+	"USE_CUSTOM_WORDS_ONLY": 7
 };
 
 export const SettingsMinValue = {
-    0: 0,
-    1: 2,
-    2: 15,
-    3: 2,
-    4: 1,
-    5: 0,
-    6: 0,
-    7: 0
+	0: 0,
+	1: 2,
+	2: 15,
+	3: 2,
+	4: 1,
+	5: 0,
+	6: 0,
+	7: 0
 };
 
 export const SettingsMaxValue = {
-    0: 27,
-    1: 20,
-    2: 240,
-    3: 10,
-    4: 5,
-    5: 5,
-    6: 2,
-    7: 1
+	0: 27,
+	1: 20,
+	2: 240,
+	3: 10,
+	4: 5,
+	5: 5,
+	6: 2,
+	7: 1
 };
 
 export const UserFlags = {
-    "ADMIN": 4
+	"ADMIN": 4
 };
 
 export const Vote = {
-    "DISLIKE": 0,
-    "LIKE": 1
+	"DISLIKE": 0,
+	"LIKE": 1
 }
 
 export const ReportReasons = {
-    "INAPPROPRIATE_BEHAVIOR": 1,
-    "SPAM": 2,
-    "CHEATING": 4
+	"INAPPROPRIATE_BEHAVIOR": 1,
+	"SPAM": 2,
+	"CHEATING": 4
 };
 
 export const Tools = {
-    "PENCIL": 0,
-    "FILL": 1
+	"PENCIL": 0,
+	"FILL": 1
 };
 
 export const BrushSize = {
-    "EXTRA_SMALL": 4,
-    "SMALL": 10,
-    "MEDIUM": 20,
-    "LARGE": 32,
-    "EXTRA_LARGE": 40
+	"EXTRA_SMALL": 4,
+	"SMALL": 10,
+	"MEDIUM": 20,
+	"LARGE": 32,
+	"EXTRA_LARGE": 40
 };
 
 export const Colors = {
-    "WHITE": 0,
-    "BLACK": 1,
-    "GRAY": 2,
-    "DARK_GRAY": 3,
-    "RED": 4,
-    "DARK_RED": 5,
-    "ORANGE": 6,
-    "DARK_ORANGE": 7,
-    "YELLOW": 8,
-    "DARK_YELLOW": 9,
-    "LIME": 10,
-    "DARK_GREEN": 11,
-    "MINT": 12,
-    "DARK_MINT": 13,
-    "CYAN": 14,
-    "DARK_CYAN": 15,
-    "BLUE": 16,
-    "DARK_BLUE": 17,
-    "MAGENTA": 18,
-    "DARK_MAGENTA": 19,
-    "PINK": 20,
-    "DARK_PINK": 21,
-    "PEACH": 22,
-    "DARK_PEACH": 23,
-    "BROWN": 24,
-    "DARK_BROWN": 25
+	"WHITE": 0,
+	"BLACK": 1,
+	"GRAY": 2,
+	"DARK_GRAY": 3,
+	"RED": 4,
+	"DARK_RED": 5,
+	"ORANGE": 6,
+	"DARK_ORANGE": 7,
+	"YELLOW": 8,
+	"DARK_YELLOW": 9,
+	"LIME": 10,
+	"DARK_GREEN": 11,
+	"MINT": 12,
+	"DARK_MINT": 13,
+	"CYAN": 14,
+	"DARK_CYAN": 15,
+	"BLUE": 16,
+	"DARK_BLUE": 17,
+	"MAGENTA": 18,
+	"DARK_MAGENTA": 19,
+	"PINK": 20,
+	"DARK_PINK": 21,
+	"PEACH": 22,
+	"DARK_PEACH": 23,
+	"BROWN": 24,
+	"DARK_BROWN": 25
 };

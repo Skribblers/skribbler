@@ -3,23 +3,23 @@ import { Packets } from "../constants.js";
 import { DrawBuilder } from "../builders/DrawBuilder.js";
 
 export class Canvas {
-    client;
+	client;
 
-    /**
-     * @type {Array<Array<Number>>}
-     */
-    drawCommands = [];
+	/**
+	 * @type {Array<Array<Number>>}
+	 */
+	drawCommands = [];
 
-    /**
-     * @param {import("skribbler").Client} client
-     */
-    constructor(client) {
-        this.client = client;
-    }
+	/**
+	 * @param {import("skribbler").Client} client
+	 */
+	constructor(client) {
+		this.client = client;
+	}
 
-    get canDraw() {
-        return this.client.userId === this.client.drawerId;
-    }
+	get canDraw() {
+		return this.client.userId === this.client.drawerId;
+	}
 
 	/**
 	 * @name draw
@@ -29,7 +29,7 @@ export class Canvas {
 	 */
 	draw(data) {
 		if(!(data instanceof DrawBuilder) && !Array.isArray(data)) throw TypeError("Expected data to either be an array or an instance of DrawBuilder");
-        if(!this.canDraw) throw Error("Canvas#draw can only be called by the player who's drawing");
+		if(!this.canDraw) throw Error("Canvas#draw can only be called by the player who's drawing");
 
 		const drawCmds = data instanceof DrawBuilder ? data.toValue() : data;
 
@@ -44,7 +44,7 @@ export class Canvas {
 	 * @throws
 	 */
 	clear() {
-        if(!this.canDraw) throw Error("Canvas#clear can only be called by the player who's drawing");
+		if(!this.canDraw) throw Error("Canvas#clear can only be called by the player who's drawing");
 
 		this.drawCommands = [];
 
@@ -58,7 +58,7 @@ export class Canvas {
 	 * @throws
 	 */
 	undo(id) {
-        if(!this.canDraw) throw Error("Canvas#undo can only be called by the player who's drawing");
+		if(!this.canDraw) throw Error("Canvas#undo can only be called by the player who's drawing");
 
 		if(this.drawCommands.length === 1) return this.clear();
 

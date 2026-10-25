@@ -35,7 +35,7 @@ client.on("stateUpdate", (data) => {
 				.draw(Colors.PINK, BrushSize.MEDIUM, 546, 234, 800, 700)
 				.draw(Colors.BLACK, BrushSize.EXTRA_SMALL, 0, 0, 900, 900)
 				.fill(Colors.CYAN, 100, 1);
-			
+
 			client.canvas.draw(drawData);
 
 			const interval = setInterval(() => {
