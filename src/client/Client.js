@@ -588,7 +588,7 @@ export class Client extends events {
 	 * @readonly
 	 */
 	get user() {
-		if(!this.userId) return null;
+		if(this.userId == null) return null;
 
 		return this.players.get(this.userId) ?? null;
 	}
@@ -600,7 +600,7 @@ export class Client extends events {
 	 * @readonly
 	 */
 	get owner() {
-		if(!this.ownerId) return null;
+		if(this.ownerId == null) return null;
 
 		return this.players.get(this.ownerId) ?? null;
 	}
